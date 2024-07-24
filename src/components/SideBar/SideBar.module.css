@@ -1,0 +1,39 @@
+.sidebar {
+  width: 250px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e7e7e7;
+}
+
+.searchSection {
+  margin-bottom: 20px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.categorySection {
+  margin-bottom: 20px;
+}
+
+.categorySection h3 {
+  margin-bottom: 10px;
+}
+
+.categorySection label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.priceSection h3 {
+  margin-bottom: 10px;
+}
+
+.priceInput {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}

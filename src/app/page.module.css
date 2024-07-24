@@ -1,0 +1,13 @@
+/* pages/page.module.css */
+
+.pageContainer {
+  display: flex;
+}
+
+.contentArea {
+  flex: 1;
+  padding: 20px;
+  background-color: #000;
+  color: #fff;
+  overflow: auto;
+}
