@@ -164,7 +164,7 @@ const CreateQuest = () => {
         <h2 className="text-xl font-bold mb-6">Quiz Preview</h2>
         <p className="text-gray-400 mb-6">
           This is how your quiz will look to students. You can add as many
-          questions as you'd like.
+          questions as you &apos;d like.
         </p>
         <div className="space-y-6">
           {questions.map((question, index) => (

@@ -38,8 +38,8 @@ const Header: React.FC = () => {
 
     // MetaMask 이벤트 리스너 설정
     if (window.ethereum) {
-      window.ethereum.on("accountsChanged", (accounts: unknown[]) => {
-        handleAccountsChanged(accounts);
+      window.ethereum.on("accountsChanged", (accounts) => {
+        handleAccountsChanged(accounts as unknown[]);
       });
     }
 

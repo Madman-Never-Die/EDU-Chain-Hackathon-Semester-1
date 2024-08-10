@@ -1,6 +1,6 @@
 import React from "react";
 
-const Icon = ({ d }) => (
+const Icon = ({ d }:any) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="18"

@@ -33,8 +33,8 @@ const MainPage = () => {
     }
 
     if (window.ethereum) {
-      window.ethereum.on("accountsChanged", (accounts: unknown[]) => {
-        handleAccountsChanged(accounts);
+      window.ethereum.on("accountsChanged", (accounts) => {
+        handleAccountsChanged(accounts as string[]);
       });
     }
 
