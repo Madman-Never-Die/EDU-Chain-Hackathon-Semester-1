@@ -11,6 +11,20 @@ declare global {
 }
 
 const QuestComponent = ({ quest, currentQuestion, onDragStart, onDragMove, onDragEnd }: any) => {
+  const handleTouchStart = (e:any) => {
+    e.preventDefault(); // 기본 터치 동작 방지
+    onDragStart(e.touches[0]);
+  };
+
+  const handleTouchMove = (e:any) => {
+    e.preventDefault(); // 기본 터치 동작 방지
+    onDragMove(e.touches[0]);
+  };
+
+  const handleTouchEnd = (e:any) => {
+    e.preventDefault(); // 기본 터치 동작 방지
+    onDragEnd(e);
+  };
   return (
       <div
           className="bg-white text-black rounded-lg overflow-hidden w-full h-full"
@@ -18,9 +32,9 @@ const QuestComponent = ({ quest, currentQuestion, onDragStart, onDragMove, onDra
           onMouseMove={onDragMove}
           onMouseUp={onDragEnd}
           onMouseLeave={onDragEnd}
-          onTouchStart={onDragStart}
-          onTouchMove={onDragMove}
-          onTouchEnd={onDragEnd}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
       >
         <div className="bg-gray-300 w-full h-[80%] flex items-center justify-center flex-col p-4">
           <h2 className="text-xl sm:text-2xl font-bold mb-4">{quest.title}</h2>
@@ -84,20 +98,20 @@ const MainPage = () => {
     setScrollDirection(null);
   };
 
-  const handleDragStart = (e:any) => {
+  const handleDragStart = (e: any) => {
     setIsDragging(true);
     startPosRef.current = {
-      x: e.clientX || e.touches[0].clientX,
-      y: e.clientY || e.touches[0].clientY
+      x: e.clientX || e.pageX,
+      y: e.clientY || e.pageY
     };
     setScrollDirection(null);
   };
 
-  const handleDragMove = (e:any) => {
+  const handleDragMove = (e: any) => {
     if (!isDragging) return;
 
-    const currentX = e.clientX || e.touches[0].clientX;
-    const currentY = e.clientY || e.touches[0].clientY;
+    const currentX = e.clientX || e.pageX;
+    const currentY = e.clientY || e.pageY;
     const diffX = startPosRef.current.x - currentX;
     const diffY = startPosRef.current.y - currentY;
 
@@ -121,7 +135,6 @@ const MainPage = () => {
       }
     }
   };
-
 
   const handleDragEnd = () => {
     setIsDragging(false);

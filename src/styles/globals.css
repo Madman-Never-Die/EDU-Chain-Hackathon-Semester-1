@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  overscroll-behavior-y: contain;
+}
+
+
 .quests-container {
   position: relative;
   width: 100%;
@@ -10,6 +15,7 @@
   max-width: 28rem;
   max-height: 48rem;
   aspect-ratio: 28 / 48;
+  touch-action: none;
 }
 
 .quest-component {
