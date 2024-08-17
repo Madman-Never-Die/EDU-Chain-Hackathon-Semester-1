@@ -164,7 +164,7 @@ const Stats = () => (
       </div>
     </div>
 );
-const CreateQuestCard = ({ handleNavigation }) => (
+const CreateQuestCard = ({ handleNavigation }: any) => (
     <div className="bg-gray-800 p-4 rounded-lg mb-6">
       <h3 className="font-bold mb-2">Create a quest</h3>
       <p className="text-gray-400 mb-4">
