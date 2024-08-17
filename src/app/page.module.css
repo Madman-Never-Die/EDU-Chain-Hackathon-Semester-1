@@ -1,7 +1,10 @@
 /* pages/page.module.css */
 
+/* page.module.css */
+
 .pageContainer {
   display: flex;
+  flex-direction: column;
 }
 
 .contentArea {
@@ -10,4 +13,11 @@
   background-color: #000;
   color: #fff;
   overflow: auto;
+}
+
+/* Media Query for larger screens */
+@media (min-width: 768px) {
+  .pageContainer {
+    flex-direction: row;
+  }
 }

@@ -1,4 +1,5 @@
 import "../styles/globals.css";
+import Header from "@/components/Header/Header";
 
 export const metadata = {
   title: "Next.js",
@@ -12,7 +13,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+    <body className="min-h-screen bg-[#0f172a] text-white flex flex-col">
+    <Header/>
+
+    <main className="flex-grow flex overflow-hidden" >
+          {children}
+        </main>
+      </body>
     </html>
   );
 }
