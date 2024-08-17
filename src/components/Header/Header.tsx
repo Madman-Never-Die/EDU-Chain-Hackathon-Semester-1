@@ -86,7 +86,7 @@ const Header: React.FC = () => {
   return (
       <header className="p-4 sm:p-6 border-b border-gray-700 flex flex-wrap justify-between items-center">
         <div className="flex items-center">
-          <Image src="/logo.png" alt="Logo" className="h-10 mr-6 cursor-pointer" onClick={() => handleNavigation("/")}/>
+          <Image src="/logo.png" alt="Logo" width={50} height={50} className="h-10 mr-6 cursor-pointer" onClick={() => handleNavigation("/")}/>
           <nav className="space-x-4">
             <a
                 onClick={() => handleNavigation("/quest/provider")}

@@ -83,10 +83,8 @@ const icons = {
 // );
 
 const Sidebar = () => (
-    <div className="w-64 bg-gray-800 text-white p-4 h-full">
-
-
-      <div className="flex items-center mb-8">
+    <div className="w-64 bg-gray-800 text-white p-4 h-screen flex flex-col">
+    <div className="flex items-center mb-8">
         <div className="w-10 h-10 bg-gray-700 rounded-full mr-3"></div>
         <h1 className="text-xl font-bold">Quest</h1>
       </div>
@@ -136,8 +134,7 @@ const Sidebar = () => (
 const Header = ({handleNavigation}:any) => (
     <header className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-bold">My Quests</h1>
-      <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
-              onClick={() => handleNavigation("/quest/create")} // 페이지 이동 처리
+      <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded" onClick={() => handleNavigation("/quest/create")} // 페이지 이동 처리
       >
         Create quest
       </button>
@@ -167,15 +164,15 @@ const Stats = () => (
       </div>
     </div>
 );
-
-const CreateQuestCard = ({ handleNavigation }:any) => (
+const CreateQuestCard = ({ handleNavigation }) => (
     <div className="bg-gray-800 p-4 rounded-lg mb-6">
       <h3 className="font-bold mb-2">Create a quest</h3>
       <p className="text-gray-400 mb-4">
         Create a new quest for your community and start rewarding participation.
       </p>
-      <button className="bg-indigo-600 text-white px-4 py-2 rounded"
-              onClick={() => handleNavigation("/quest/create")}
+      <button
+          className="bg-indigo-600 text-white px-4 py-2 rounded"
+          onClick={() => handleNavigation("/quest/create")}
       >
         Create quest
       </button>
@@ -185,42 +182,45 @@ const CreateQuestCard = ({ handleNavigation }:any) => (
 const QuestTable = () => (
     <div>
       <h3 className="text-xl font-bold mb-4">Recent quests</h3>
-      <table className="w-full bg-gray-800 rounded-lg overflow-hidden">
-        <thead className="bg-gray-700 text-gray-300">
-        <tr className="text-left text-gray-400">
-          <th className="pb-2">Quest Name</th>
-          <th className="pb-2">Participants</th>
-          <th className="pb-2">Start Date</th>
-          <th className="pb-2">End Date</th>
-          <th className="pb-2">Status</th>
-          <th className="pb-2">Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        {["2022", "2023", "2024", "2025", "2026"].map((year, index) => (
-            <tr key={year} className="border-t border-gray-700">
-              <td className="py-3">{`#Quest ${year}`}</td>
-              <td>{123 + index * 111}</td>
-              <td>{`Jan ${15 + index * 5}, 2022`}</td>
-              <td>{`Feb ${15 + index * 5}, 2022`}</td>
-              <td>
-              <span
-                  className={`px-2 py-1 rounded ${
-                      index < 3 ? "bg-indigo-600" : "bg-gray-600"
-                  }`}
-              >
-                {index < 3 ? "Active" : "Draft"}
-              </span>
-              </td>
-              <td>
-                <button className="text-indigo-400">Edit</button>
-              </td>
-            </tr>
-        ))}
-        </tbody>
-      </table>
+      <div className="overflow-x-auto">
+        <table className="w-full bg-gray-800 rounded-lg overflow-hidden">
+          <thead className="bg-gray-700 text-gray-300">
+          <tr>
+            <th className="py-2 px-4 text-left">Quest Name</th>
+            <th className="py-2 px-4 text-left">Participants</th>
+            <th className="py-2 px-4 text-left">Start Date</th>
+            <th className="py-2 px-4 text-left">End Date</th>
+            <th className="py-2 px-4 text-left">Status</th>
+            <th className="py-2 px-4 text-left">Action</th>
+          </tr>
+          </thead>
+          <tbody>
+          {["2022", "2023", "2024", "2025", "2026"].map((year, index) => (
+              <tr key={year} className="border-t border-gray-700">
+                <td className="py-3 px-4">{`#Quest ${year}`}</td>
+                <td className="py-3 px-4">{123 + index * 111}</td>
+                <td className="py-3 px-4">{`Jan ${15 + index * 5}, 2022`}</td>
+                <td className="py-3 px-4">{`Feb ${15 + index * 5}, 2022`}</td>
+                <td className="py-3 px-4">
+                <span
+                    className={`px-2 py-1 rounded ${
+                        index < 3 ? "bg-indigo-600" : "bg-gray-600"
+                    }`}
+                >
+                  {index < 3 ? "Active" : "Draft"}
+                </span>
+                </td>
+                <td className="py-3 px-4">
+                  <button className="text-indigo-400">Edit</button>
+                </td>
+              </tr>
+          ))}
+          </tbody>
+        </table>
+      </div>
     </div>
 );
+
 
 // const QuestProviderPage = () => (
 //   <div className="flex bg-gray-900 text-white min-h-screen">
@@ -251,10 +251,10 @@ const QuestProviderPage = () => {
 
 
   return (
-      <div className="flex w-full h-full">
+      <div className="flex w-full h-screen bg-gray-900 text-white">
         <Sidebar/>
-        <main className="flex-1 p-8"> {/* ml-64로 사이드바 너비만큼 왼쪽 마진 추가 */}
-          <div className="max-w-7xl mx-auto"> {/* 최대 너비를 늘리고 가운데 정렬 */}
+        <main className="flex-1 overflow-auto">
+          <div className="max-w-7xl mx-auto px-4 py-8">
             <Header  handleNavigation={handleNavigation}/>
             <SearchBar/>
             <Stats/>
