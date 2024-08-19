@@ -1,9 +1,13 @@
 "use client";
+
 import React, {useState, useEffect} from "react";
 import {MetaMaskInpageProvider} from "@metamask/providers";
 import styles from "./Header.module.css";
 import {useRouter} from "next/navigation";
 import Image from "next/image";
+import {useRecoilState} from "recoil";
+import {accountState} from "@/recoil/account";
+import {roleState} from "@/recoil/role";
 
 // window.ethereum을 MetaMaskInpageProvider 타입으로 정의
 declare global {
@@ -12,9 +16,12 @@ declare global {
   }
 }
 
-const Header: React.FC = () => {
-  const [account, setAccount] = useState<string | null>(null);
-  const router = useRouter(); // useRouter 훅을 클라이언트 사이드에서 직접 사용
+const Header: React.FC<{ isAuthenticated: boolean }> = ({isAuthenticated}) => {
+
+  const router = useRouter();
+  const [account, setAccount] = useRecoilState(accountState)
+  const [role, setRole] = useRecoilState(roleState)
+
 
   useEffect(() => {
     const handleAccountsChanged = (accounts: unknown[]) => {
@@ -83,41 +90,56 @@ const Header: React.FC = () => {
     router.push(url);
   };
 
+  useEffect(() => {
+    if (role) console.log(role)
+  }, [role]);
   return (
-      <header className="p-4 sm:p-6 border-b border-gray-700 flex flex-wrap justify-between items-center">
-        <div className="flex items-center">
-          <Image src="/logo.png" alt="Logo" width={50} height={50} className="h-10 mr-6 cursor-pointer" onClick={() => handleNavigation("/")}/>
-          <nav className="space-x-4">
-            <a
-                onClick={() => handleNavigation("/quest/provider")}
-                href="#"
-                className="hover:text-gray-300"
-            >
-              QuestProvider
-            </a>
-            <a
-                onClick={() => handleNavigation("/protocol/provider")}
-                href="#"
-                className="hover:text-gray-300"
-            >
-              ProtocolProvider
-            </a>
-          </nav>
-        </div>
-        <div>
-          {account ? (
-              <span>Connected: {account}</span>
-          ) : (
-              <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"
-                  onClick={handleConnectWallet}
-              >
-                Connect Wallet
-              </button>
-          )}
-        </div>
-      </header>
+      <>
+        {isAuthenticated &&
+            <header className="p-4 sm:p-6 border-b border-gray-700 flex flex-wrap justify-between items-center">
+              <div className="flex items-center">
+                <Image src="/logo.png" alt="Logo" width={50} height={50} className="h-10 mr-6 cursor-pointer"
+                       onClick={() => handleNavigation("/")}/>
+                <nav className="space-x-4">
+                  {
+                      role === "Quest Provider" &&
+                      <a
+                          onClick={() => handleNavigation("/quest/provider")}
+                          href="#"
+                          className="hover:text-gray-300"
+                      >
+                        QuestProvider
+                      </a>
+                  }
 
+                  {
+                      role === "Protocol Provider"
+                      && <a
+                          onClick={() => handleNavigation("/protocol/provider")}
+                          href="#"
+                          className="hover:text-gray-300"
+                      >
+                        ProtocolProvider
+                      </a>
+                  }
+
+                </nav>
+              </div>
+              <div>
+                {account ? (
+                    <span>Connected: {account}</span>
+                ) : (
+                    <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"
+                        onClick={handleConnectWallet}
+                    >
+                      Connect Wallet
+                    </button>
+                )}
+              </div>
+            </header>
+        }
+      </>
   );
 };
 

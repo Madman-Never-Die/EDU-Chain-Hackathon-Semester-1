@@ -110,13 +110,8 @@ const MainPage = () => {
   const startPosRef = useRef({x: 0, y: 0});
   const [scrollDirection, setScrollDirection] = useState<string | null>(null);
 
-  const questList: any = useQuestList();
+  const { questList, isLoading, error, fetchQuestList }: any = useQuestList();
 
-  useEffect(() => {
-    if (questList.length > 0) {
-      console.log(questList);
-    }
-  }, [questList]);
 
   const handleScroll = (direction: string) => {
     switch (direction) {

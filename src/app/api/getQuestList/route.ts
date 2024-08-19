@@ -1,6 +1,6 @@
 // app/api/createQuest/route.ts
 
-import { NextResponse } from 'next/server';
+import {NextResponse} from 'next/server';
 
 export async function GET(request: Request) {
   try {
@@ -13,19 +13,21 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
+      cache: "no-store"
     });
 
     // 백엔드 서버의 응답을 받아옵니다.
     const responseData = await backendResponse.json();
 
+
     if (backendResponse.ok) {
-      return NextResponse.json(responseData, { status: 200 });
+      return NextResponse.json(responseData, {status: 200});
     } else {
       console.error('Failed to create quest on backend:', responseData);
-      return NextResponse.json({ message: 'Failed to create quest on backend' }, { status: backendResponse.status });
+      return NextResponse.json({message: 'Failed to create quest on backend'}, {status: backendResponse.status});
     }
   } catch (error) {
     console.error('Failed to create quest:', error);
-    return NextResponse.json({ message: 'Failed to create quest' }, { status: 500 });
+    return NextResponse.json({message: 'Failed to create quest'}, {status: 500});
   }
 }
