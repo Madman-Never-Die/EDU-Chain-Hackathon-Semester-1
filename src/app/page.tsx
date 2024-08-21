@@ -4,6 +4,9 @@ import React, {useState, useEffect, useRef} from "react";
 import {MetaMaskInpageProvider} from "@metamask/providers";
 import {useRouter} from "next/navigation";
 import useQuestList from "@/hooks/quest/useQuestList";
+import {useRecoilState, useRecoilValue} from "recoil";
+import {accountState} from "@/recoil/account";
+import {roleState} from "@/recoil/role";
 
 declare global {
   interface Window {
@@ -36,13 +39,14 @@ interface Quest {
   questions: Question[];
 }
 
-const QuestComponent = ({quest, currentQuestion, onDragStart, onDragMove, onDragEnd, onAnswerSelect}: {
+const QuestComponent = ({ quest, currentQuestion, onDragStart, onDragMove, onDragEnd, onAnswerSelect, onQuestComplete }: {
   quest: Quest;
   currentQuestion: number;
   onDragStart: any;
   onDragMove: any;
   onDragEnd: any;
   onAnswerSelect: (answer: Answer) => void;
+  onQuestComplete: (questId: number) => void;
 }) => {
   const handleTouchStart = (e: React.TouchEvent) => {
     onDragStart(e.touches[0]);
@@ -58,9 +62,13 @@ const QuestComponent = ({quest, currentQuestion, onDragStart, onDragMove, onDrag
 
   const handleAnswerClick = (answer: Answer) => {
     if (answer.correctAnswer) {
-      alert("정답!")
+      alert("정답!");
+      if (currentQuestion === quest.questions.length - 1) {
+        // 마지막 문제를 맞췄을 때 퀘스트 완료 처리
+        onQuestComplete(quest.id);
+      }
     } else {
-      alert("틀렸습니다.")
+      alert("틀렸습니다.");
     }
     onAnswerSelect(answer);
   };
@@ -101,7 +109,9 @@ const QuestComponent = ({quest, currentQuestion, onDragStart, onDragMove, onDrag
 };
 
 const MainPage = () => {
-  const [account, setAccount] = useState<string | null>(null);
+  const [account, setAccount] = useRecoilState(accountState);
+  const [role, setRole] = useRecoilState(roleState)
+
   const router = useRouter();
 
   const [currentQuest, setCurrentQuest] = useState(0);
@@ -110,8 +120,21 @@ const MainPage = () => {
   const startPosRef = useRef({x: 0, y: 0});
   const [scrollDirection, setScrollDirection] = useState<string | null>(null);
 
-  const { questList, isLoading, error, fetchQuestList }: any = useQuestList();
+  const { questList, isLoading, error, fetchQuestList, updateQuestParticipation }: any = useQuestList();
 
+  const handleQuestComplete = async (questId: number) => {
+    try {
+      const updatedQuest = await updateQuestParticipation(questId);
+      // 로컬 상태 업데이트
+      const updatedQuestList = questList.map((quest: any) =>
+          quest.id === questId ? { ...quest, participation: updatedQuest.participation } : quest
+      );
+      // questList 상태 업데이트 함수 호출 (useQuestList 훅에서 제공해야 함)
+      // 예: setQuestList(updatedQuestList);
+    } catch (error) {
+      console.error("Failed to update quest participation:", error);
+    }
+  };
 
   const handleScroll = (direction: string) => {
     switch (direction) {
@@ -326,6 +349,7 @@ const MainPage = () => {
                             onDragMove={handleDragMove}
                             onDragEnd={handleDragEnd}
                             onAnswerSelect={onAnswerSelect}
+                            onQuestComplete={handleQuestComplete}
                         />
                       </div>
                   ))}

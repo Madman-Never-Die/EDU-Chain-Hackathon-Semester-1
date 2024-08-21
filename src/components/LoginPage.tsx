@@ -1,9 +1,12 @@
-import React, {useEffect, useState} from 'react';
+'use client'
+
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import {useRecoilState, useRecoilValue} from "recoil";
-import {accountState} from "@/recoil/account";
-import {roleState} from "@/recoil/role";
-import {MetaMaskInpageProvider} from "@metamask/providers";
+import { useRecoilState } from "recoil";
+import { accountState } from "@/recoil/account";
+import { roleState } from "@/recoil/role";
+import { MetaMaskInpageProvider } from "@metamask/providers";
+import { useRouter } from "next/navigation";
 
 declare global {
   interface Window {
@@ -13,17 +16,54 @@ declare global {
 
 const LoginPage = () => {
   const [account, setAccount] = useRecoilState(accountState);
-  const [role, setRole] = useRecoilState(roleState)
-
+  const [role, setRole] = useRecoilState(roleState);
+  const [step, setStep] = useState<'initial' | 'roleSelection'>('initial');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const savedAccount = localStorage.getItem("account");
-    if (savedAccount) {
-      setAccount(savedAccount);
-    }
-  }, []);
+    const checkUserStatus = async () => {
+      const savedAccount = localStorage.getItem("account");
+      if (savedAccount) {
+        setAccount(savedAccount);
+        try {
+          const response = await fetch('/api/users/check-wallet', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ walletAddress: savedAccount }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Backend server error');
+          }
+
+          const data = await response.json();
+
+          if (data.exists) {
+            setRole(data.role);
+            // 여기서 사용자 정보를 상태나 로컬 스토리지에 저장할 수 있습니다.
+            localStorage.setItem("userRole", data.role);
+
+          } else {
+            setStep('roleSelection');
+          }
+        } catch (error) {
+          console.error("Error checking user status:", error);
+          setError("Failed to check user status. Please try again.");
+        }
+      }
+    };
+
+    checkUserStatus();
+  }, [setAccount, setRole, router]);
 
   const handleConnectWallet = async () => {
+    setIsLoading(true);
+    setError(null);
+
     if (window.ethereum) {
       try {
         const accounts: any = await window.ethereum.request({
@@ -31,77 +71,199 @@ const LoginPage = () => {
         });
 
         if (accounts && accounts.length > 0) {
-          setAccount(accounts[0]);
-          localStorage.setItem("account", accounts[0]);
-          console.log("Connected account:", accounts[0]);
+          const walletAddress = accounts[0];
+          setAccount(walletAddress);
+          localStorage.setItem("account", walletAddress);
+          console.log("Connected account:", walletAddress);
+
+          // 백엔드에서 사용자 정보 확인
+          const response = await fetch('/api/users/check-wallet', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ walletAddress }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Backend server error');
+          }
+
+          const data = await response.json();
+
+          if (data.exists) {
+            // 사용자가 존재하면 로그인 처리
+            setRole(data.role);
+            localStorage.setItem("userRole", data.role);
+          } else {
+
+            setError("This is an unregistered wallet address. Please create a new wallet.");
+          }
         } else {
-          console.error("Failed to retrieve accounts.");
+          throw new Error("Failed to retrieve account.");
         }
       } catch (error) {
         console.error("Wallet connection failed:", error);
+        setError(error instanceof Error ? error.message : 'Wallet connection failed.');
       }
     } else {
       console.error("MetaMask is not installed.");
-      alert("Please install MetaMask to use this feature.");
+      setError("MetaMask is not installed. Please install MetaMask.");
+    }
+
+    setIsLoading(false);
+  };
+
+  const handleCreateWallet = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (window.ethereum) {
+        const accounts: any = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+
+        if (accounts && accounts.length > 0) {
+          const walletAddress = accounts[0];
+          setAccount(walletAddress);
+          localStorage.setItem("account", walletAddress);
+          console.log("Connected account:", walletAddress);
+
+          const response = await fetch('/api/users/check-wallet', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ walletAddress }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Backend server error');
+          }
+
+          const data = await response.json();
+          console.log(data)
+
+          if (data.exists) {
+            setRole(data.role);
+            localStorage.setItem("userRole", data.role);
+          } else {
+            setStep('roleSelection');
+          }
+        } else {
+          throw new Error("Failed to retrieve account.");
+        }
+      } else {
+        throw new Error("MetaMask is not installed.");
+      }
+    } catch (error) {
+      console.error("Wallet creation/connection failure: ", error);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRoleSelect = (selectedRole: string) => {
-    setRole(selectedRole);
-    console.log("Selected role:", selectedRole);
+  const handleRoleSelect = async (selectedRole: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const roleIdMap: any = {
+        "Protocol Provider": 3,
+        "Quest Provider": 2,
+        "User": 1
+      };
+
+      const roleId = roleIdMap[selectedRole];
+
+      if (!roleId) {
+        throw new Error('Invalid role selected');
+      }
+
+      const response = await fetch('/api/users/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ walletAddress: account, roleId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('There is a problem with the server response.');
+      }
+
+      const data = await response.json();
+
+      setRole(selectedRole);
+      localStorage.setItem("userRole", selectedRole); // 로컬 스토리지에 역할 저장
+      console.log("User created:", data);
+
+    } catch (error) {
+      console.error("Role selection failed:", error);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const renderInitialStep = () => (
+      <div className="bg-black text-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h2 className="text-2xl font-bold text-center mb-6">EduSuplex</h2>
+        <p className="text-center mb-8">Lets Deep dive into EduSuplex</p>
+        <p className="text-center text-sm mb-4">Connect your wallet to track your progress</p>
+        <button
+            onClick={handleCreateWallet}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-4"
+        >
+          Create a Wallet
+        </button>
+        <button
+            onClick={handleConnectWallet}
+            className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 px-4 rounded-md"
+        >
+          Already have a wallet?
+        </button>
+      </div>
+  );
 
-
+  const renderRoleSelection = () => (
+      <div className="bg-black text-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h2 className="text-2xl font-bold text-center mb-6">Select your role</h2>
+        <div className="space-y-4">
+          <RoleCard
+              title="Protocol Provider"
+              description="Develop and deploy smart contract tech"
+              imageSrc="/protocol-provider.jpg"
+              onClick={() => handleRoleSelect("Protocol Provider")}
+          />
+          <RoleCard
+              title="Quest Provider"
+              description="Design and launch quests on the blockchain"
+              imageSrc="/quest-provider.jpg"
+              onClick={() => handleRoleSelect("Quest Provider")}
+          />
+          <RoleCard
+              title="User"
+              description="Earn crypto by completing quests"
+              imageSrc="/user.jpg"
+              onClick={() => handleRoleSelect("User")}
+          />
+        </div>
+      </div>
+  );
 
   return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-gray-800 shadow-md rounded-lg overflow-hidden">
-            <div className="p-6">
-              <h2 className="text-2xl font-bold text-center text-white mb-6">EDU SUPLEX</h2>
-              {!account ? (
-                  <>
-                    <button
-                        onClick={handleConnectWallet}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-4"
-                    >
-                      Connect Wallet
-                    </button>
-                    <button className="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-semibold py-2 px-4 rounded-md">
-                      Create a Wallet
-                    </button>
-                  </>
-              ) : (
-                  <div className="text-center">
-                    <p className="text-green-400 mb-2">Wallet Connected</p>
-                    <p className="text-gray-300 break-all">{account}</p>
-                  </div>
-              )}
+        {isLoading && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <p className="text-white text-xl">
+                {step === 'initial' ? 'Connecting wallet...' : 'Processing...'}
+              </p>
             </div>
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <RoleCard
-                title="Protocol Provider"
-                description="Develop and deploy smart contract tech"
-                imageSrc="/protocol-provider.jpg"
-                onClick={() => handleRoleSelect("Protocol Provider")} // 역할 선택 핸들러 추가
-            />
-            <RoleCard
-                title="Quest Provider"
-                description="Design and launch quests on the blockchain"
-                imageSrc="/quest-provider.jpg"
-                onClick={() => handleRoleSelect("Quest Provider")} // 역할 선택 핸들러 추가
-            />
-            <RoleCard
-                title="User"
-                description="Earn crypto by completing quests"
-                imageSrc="/user.jpg"
-                onClick={() => handleRoleSelect("User")} // 역할 선택 핸들러 추가
-            />
-          </div>
-        </div>
+        )}
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {step === 'initial' ? renderInitialStep() : renderRoleSelection()}
       </div>
   );
 };
@@ -110,21 +272,22 @@ interface RoleCardProps {
   title: string;
   description: string;
   imageSrc: string;
-  onClick: () => void; // onClick prop 추가
+  onClick: () => void;
 }
 
 const RoleCard: React.FC<RoleCardProps> = ({ title, description, imageSrc, onClick }) => {
   return (
       <button
           onClick={onClick}
-          className="bg-gray-800 rounded-lg overflow-hidden shadow-md focus:outline-none"
+          className="bg-gray-800 rounded-lg overflow-hidden shadow-md focus:outline-none w-full text-left flex items-center"
       >
-        <Image src={imageSrc} alt={title} width={300} height={200} className="w-full h-32 object-cover" />
-        <div className="p-4">
+        <Image src={imageSrc} alt={title} width={100} height={100} className="w-1/3 h-24 object-cover" />
+        <div className="p-4 w-2/3">
           <h3 className="font-bold text-white">{title}</h3>
           <p className="text-sm text-gray-400">{description}</p>
         </div>
       </button>
   );
 };
+
 export default LoginPage;

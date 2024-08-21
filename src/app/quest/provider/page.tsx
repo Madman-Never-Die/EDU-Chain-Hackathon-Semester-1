@@ -1,8 +1,10 @@
 'use client'
 
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {router} from "next/client";
 import {useRouter} from "next/navigation";
+import {useRecoilState} from "recoil";
+import {accountState} from "@/recoil/account";
 
 const Icon = ({d}: any) => (
     <svg
@@ -83,21 +85,21 @@ const Header = ({handleNavigation}:any) => (
 );
 
 
-const Stats = () => (
+const Stats = ({ totalQuests, totalParticipation }: { totalQuests: number, totalParticipation: number }) => (
     <div className="grid grid-cols-2 gap-4 mb-6">
       <div className="bg-gray-800 p-4 rounded-lg">
         <h3 className="text-gray-400 mb-2">Total quests</h3>
-        <p className="text-3xl font-bold">21</p>
+        <p className="text-3xl font-bold">{totalQuests}</p>
       </div>
       <div className="bg-gray-800 p-4 rounded-lg">
         <h3 className="text-gray-400 mb-2">Total participation</h3>
-        <p className="text-3xl font-bold">1,234</p>
+        <p className="text-3xl font-bold">{totalParticipation}</p>
       </div>
     </div>
 );
 
 
-const QuestTable = () => (
+const QuestTable = ({ quests, onPageChange, currentPage, totalPages }: any) => (
     <div>
       <h3 className="text-xl font-bold mb-4">Recent quests</h3>
       <div className="overflow-x-auto">
@@ -113,19 +115,15 @@ const QuestTable = () => (
           </tr>
           </thead>
           <tbody>
-          {["2022", "2023", "2024", "2025", "2026"].map((year, index) => (
-              <tr key={year} className="border-t border-gray-700">
-                <td className="py-3 px-4">{`#Quest ${year}`}</td>
-                <td className="py-3 px-4">{123 + index * 111}</td>
-                <td className="py-3 px-4">{`Jan ${15 + index * 5}, 2022`}</td>
-                <td className="py-3 px-4">{`Feb ${15 + index * 5}, 2022`}</td>
+          {quests.map((quest: any) => (
+              <tr key={quest.id} className="border-t border-gray-700">
+                <td className="py-3 px-4">{quest.title}</td>
+                <td className="py-3 px-4">{quest.participation}</td>
+                <td className="py-3 px-4">{new Date(quest.created_at).toLocaleDateString()}</td>
+                <td className="py-3 px-4">{new Date(quest.modified_at).toLocaleDateString()}</td>
                 <td className="py-3 px-4">
-                <span
-                    className={`px-2 py-1 rounded ${
-                        index < 3 ? "bg-indigo-600" : "bg-gray-600"
-                    }`}
-                >
-                  {index < 3 ? "Active" : "Draft"}
+                <span className={`px-2 py-1 rounded ${quest.status === 'Active' ? "bg-indigo-600" : "bg-gray-600"}`}>
+                  {quest.status}
                 </span>
                 </td>
                 <td className="py-3 px-4">
@@ -136,12 +134,78 @@ const QuestTable = () => (
           </tbody>
         </table>
       </div>
+      <div className="mt-4 flex justify-center">
+        <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="mx-1 px-3 py-1 bg-gray-700 rounded"
+        >
+          Previous
+        </button>
+        <span className="mx-2">Page {currentPage} of {totalPages}</span>
+        <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="mx-1 px-3 py-1 bg-gray-700 rounded"
+        >
+          Next
+        </button>
+      </div>
     </div>
 );
 
 
 const QuestProviderPage = () => {
-  const router = useRouter(); // useRouter 훅을 컴포넌트 내부에서 사용
+  const router = useRouter();
+  const [account] = useRecoilState(accountState);
+  const [totalQuests, setTotalQuests] = useState<number>(0);
+  const [totalParticipation, setTotalParticipation] = useState<number>(0);
+  const [recentQuests, setRecentQuests] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!account) return;
+
+      try {
+        // Fetch total quests
+        const questsResponse = await fetch(`/api/quests/count?walletAddress=${account}`);
+        const questsData = await questsResponse.json();
+        setTotalQuests(questsData.count);
+
+        // Fetch total participation
+        const participationResponse = await fetch(`/api/quests/total-participation?walletAddress=${account}`);
+        const participationData = await participationResponse.json();
+        setTotalParticipation(participationData.totalParticipation);
+
+        // Fetch recent quests
+        await fetchRecentQuests(1);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [account]);
+
+  const fetchRecentQuests = async (page: number) => {
+    try {
+      const response = await fetch(`/api/quests/recent?walletAddress=${account}&page=${page}&limit=10`);
+      const data = await response.json();
+      setRecentQuests(data.quests);
+      setCurrentPage(data.page);
+      setTotalPages(Math.ceil(data.total / data.limit));
+    } catch (error) {
+      console.error('Error fetching recent quests:', error);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    fetchRecentQuests(newPage);
+  };
+
+
 
   const handleNavigation = (url: string) => {
     const protectedRoutes = ["/hacksLiquid", "/community"];
@@ -160,10 +224,14 @@ const QuestProviderPage = () => {
         <Sidebar handleNavigation={handleNavigation}/>
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto px-4 py-8">
-            <Header  handleNavigation={handleNavigation}/>
-
-            <Stats/>
-            <QuestTable/>
+            <Header handleNavigation={handleNavigation}/>
+            <Stats totalQuests={totalQuests} totalParticipation={totalParticipation}/>
+            <QuestTable
+                quests={recentQuests}
+                onPageChange={handlePageChange}
+                currentPage={currentPage}
+                totalPages={totalPages}
+            />
           </div>
         </main>
       </div>

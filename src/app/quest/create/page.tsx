@@ -1,8 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import {useRecoilState} from "recoil";
+import {accountState} from "@/recoil/account";
 
 const CreateQuest = () => {
+  const [account, setAccount] = useRecoilState(accountState);
+
   const [questTitle, setQuestTitle] = useState("");
   const [protocolContent, setProtocolContent] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState({
@@ -45,7 +49,7 @@ const CreateQuest = () => {
       title: questTitle,
       content: protocolContent,
       liquidity_provider: "arbitrum",
-      provider: "rey",
+      provider: account,
       type: "network",
       questions
     };
