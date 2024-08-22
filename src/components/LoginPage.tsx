@@ -1,13 +1,12 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Image from 'next/image';
-import { useRecoilState } from "recoil";
-import { accountState } from "@/recoil/account";
-import { roleState } from "@/recoil/role";
-import { MetaMaskInpageProvider } from "@metamask/providers";
-import { useRouter } from "next/navigation";
-import LoginButton from "@/components/LoginButton";
+import {useRecoilState} from "recoil";
+import {accountState, stepState} from "@/recoil/account";
+import {roleState} from "@/recoil/role";
+import {MetaMaskInpageProvider} from "@metamask/providers";
+import {useRouter} from "next/navigation";
 
 // @ts-ignore
 import {useOCAuth} from "@opencampus/ocid-connect-js";
@@ -20,16 +19,12 @@ declare global {
 
 const LoginPage = () => {
   const [account, setAccount] = useRecoilState(accountState);
-  const [role, setRole]:any= useRecoilState(roleState);
-  const [step, setStep] = useState<'initial' | 'roleSelection'>('initial');
+  const [role, setRole]: any = useRecoilState(roleState);
+  const [step, setStep] = useRecoilState(stepState)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { authState, ocAuth } = useOCAuth();
-
-  useEffect(() => {
-    console.log(authState);
-  }, [authState]); // Now it will log whenever authState changes
+  const {authState, ocAuth} = useOCAuth();
 
 
   useEffect(() => {
@@ -43,7 +38,7 @@ const LoginPage = () => {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ walletAddress: savedAccount }),
+            body: JSON.stringify({walletAddress: savedAccount}),
           });
 
           if (!response.ok) {
@@ -79,111 +74,6 @@ const LoginPage = () => {
     return <div>Loading...</div>;
   }
 
-
-  const handleConnectWallet = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    if (window.ethereum) {
-      try {
-        const accounts: any = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-
-        if (accounts && accounts.length > 0) {
-          const walletAddress = accounts[0];
-          setAccount(walletAddress);
-          localStorage.setItem("account", walletAddress);
-          console.log("Connected account:", walletAddress);
-
-          // 백엔드에서 사용자 정보 확인
-          const response = await fetch('/api/users/check-wallet', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ walletAddress }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Backend server error');
-          }
-
-          const data = await response.json();
-
-          if (data.exists) {
-            // 사용자가 존재하면 로그인 처리
-            setRole(data.role);
-            localStorage.setItem("userRole", data.role);
-          } else {
-
-            setError("This is an unregistered wallet address. Please create a new wallet.");
-          }
-        } else {
-          throw new Error("Failed to retrieve account.");
-        }
-      } catch (error) {
-        console.error("Wallet connection failed:", error);
-        setError(error instanceof Error ? error.message : 'Wallet connection failed.');
-      }
-    } else {
-      console.error("MetaMask is not installed.");
-      setError("MetaMask is not installed. Please install MetaMask.");
-    }
-
-    setIsLoading(false);
-  };
-
-  const handleCreateWallet = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (window.ethereum) {
-        const accounts: any = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-
-        if (accounts && accounts.length > 0) {
-          const walletAddress = accounts[0];
-          setAccount(walletAddress);
-          localStorage.setItem("account", walletAddress);
-          console.log("Connected account:", walletAddress);
-
-          const response = await fetch('/api/users/check-wallet', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ walletAddress }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Backend server error');
-          }
-
-          const data = await response.json();
-          console.log(data)
-
-          if (data.exists) {
-            setRole(data.role);
-            localStorage.setItem("userRole", data.role);
-          } else {
-            setStep('roleSelection');
-          }
-        } else {
-          throw new Error("Failed to retrieve account.");
-        }
-      } else {
-        throw new Error("MetaMask is not installed.");
-      }
-    } catch (error) {
-      console.error("Wallet creation/connection failure: ", error);
-      setError(error instanceof Error ? error.message : 'An unknown error occurred.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleRoleSelect = async (selectedRole: string) => {
     setIsLoading(true);
     setError(null);
@@ -206,7 +96,14 @@ const LoginPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ walletAddress: account, roleId }),
+        cache: "no-store",
+        body: JSON.stringify(
+            {
+              nickname: ocAuth.getAuthInfo().edu_username,
+              walletAddress: account,
+              roleId
+            }
+        ),
       });
 
       if (!response.ok) {
@@ -227,6 +124,14 @@ const LoginPage = () => {
     }
   };
 
+  const handleLogin = async () => {
+    try {
+      await ocAuth.signInWithRedirect({state: 'opencampus'});
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+  };
+
   const renderInitialStep = () => (
       <div className="bg-black text-white p-6 rounded-lg shadow-lg max-w-md w-full">
         <h2 className="text-2xl font-bold text-center mb-6">EduSuplex</h2>
@@ -234,22 +139,17 @@ const LoginPage = () => {
         <p className="text-center text-sm mb-4">Connect your wallet to track your progress</p>
 
 
-
-        {authState.isAuthenticated ? (
-            <p>You are logged in! {JSON.stringify(ocAuth.getAuthInfo())}</p>
-
-        ) : (
-            <LoginButton />
-        )}
+        <>
+          <button
+              onClick={handleLogin}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-4"
+          >
+            Create a Wallet
+          </button>
+        </>
 
         <button
-            onClick={handleCreateWallet}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-4"
-        >
-          Create a Wallet
-        </button>
-        <button
-            onClick={handleConnectWallet}
+            onClick={handleLogin}
             className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 px-4 rounded-md"
         >
           Already have a wallet?
@@ -305,13 +205,13 @@ interface RoleCardProps {
   onClick: () => void;
 }
 
-const RoleCard: React.FC<RoleCardProps> = ({ title, description, imageSrc, onClick }) => {
+const RoleCard: React.FC<RoleCardProps> = ({title, description, imageSrc, onClick}) => {
   return (
       <button
           onClick={onClick}
           className="bg-gray-800 rounded-lg overflow-hidden shadow-md focus:outline-none w-full text-left flex items-center"
       >
-        <Image src={imageSrc} alt={title} width={100} height={100} className="w-1/3 h-24 object-cover" />
+        <Image src={imageSrc} alt={title} width={100} height={100} className="w-1/3 h-24 object-cover"/>
         <div className="p-4 w-2/3">
           <h3 className="font-bold text-white">{title}</h3>
           <p className="text-sm text-gray-400">{description}</p>

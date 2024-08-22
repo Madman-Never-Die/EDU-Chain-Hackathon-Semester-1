@@ -8,17 +8,22 @@ import LoginPage from "@/components/LoginPage";
 import Header from "@/components/Header/Header";
 import {roleState} from "@/recoil/role";
 
+//@ts-ignore
+import {useOCAuth} from "@opencampus/ocid-connect-js";
+
 
 
 const AuthWrapper = ({children}: { children: React.ReactNode }) => {
-  const account = useRecoilValue(accountState);
+  const [account, setAccount] = useRecoilState(accountState);
   const [role, setRole] = useRecoilState(roleState)
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
 
+
   useEffect(() => {
     setIsClient(true);
   }, []);
+
 
   if (!isClient) {
     return null; // 또는 로딩 인디케이터
@@ -26,7 +31,7 @@ const AuthWrapper = ({children}: { children: React.ReactNode }) => {
 
   // 로그인하지 않은 경우 로그인 페이지 표시 (지갑 해제하는 경우 로그인 페이지로)
   if (!account || !role) {
-    return <LoginPage/>;
+    if(pathname !== "/redirect") return <LoginPage/>;
   }
 
 

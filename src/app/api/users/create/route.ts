@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   try {
-    const { walletAddress, roleId } = await request.json()
+    const { nickname, walletAddress, roleId } = await request.json()
     const backendUrl = 'http://localhost:8080'; // 백엔드 서버의 실제 URL로 변경
 
 
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ walletAddress, roleId }),
+      body: JSON.stringify({ nickname, walletAddress, roleId }),
     })
 
     if (!backendResponse.ok) {
