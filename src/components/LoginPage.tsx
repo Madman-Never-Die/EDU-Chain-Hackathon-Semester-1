@@ -16,7 +16,7 @@ declare global {
 
 const LoginPage = () => {
   const [account, setAccount] = useRecoilState(accountState);
-  const [role, setRole] = useRecoilState(roleState);
+  const [role, setRole]:any= useRecoilState(roleState);
   const [step, setStep] = useState<'initial' | 'roleSelection'>('initial');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -320,7 +320,7 @@ const MainPage = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-grow overflow-y-auto p-4">
+        <main className="flex-grow overflow-y-auto p-4 flex items-center justify-center">
           <div className="quests-container h-full flex items-center justify-center">
             {questList.map((quest: any, questIndex: any) => (
                 <div

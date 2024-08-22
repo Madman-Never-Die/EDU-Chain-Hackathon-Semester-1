@@ -32,7 +32,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
       <>
         <Header isAuthenticated={!!account} />
-        <main className="flex-grow flex overflow-hidden">
+        <main className="overflow-hidden">
           {children}
         </main>
       </>
