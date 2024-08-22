@@ -7,6 +7,10 @@ import { accountState } from "@/recoil/account";
 import { roleState } from "@/recoil/role";
 import { MetaMaskInpageProvider } from "@metamask/providers";
 import { useRouter } from "next/navigation";
+import LoginButton from "@/components/LoginButton";
+
+// @ts-ignore
+import {useOCAuth} from "@opencampus/ocid-connect-js";
 
 declare global {
   interface Window {
@@ -21,6 +25,12 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { authState, ocAuth } = useOCAuth();
+
+  useEffect(() => {
+    console.log(authState);
+  }, [authState]); // Now it will log whenever authState changes
+
 
   useEffect(() => {
     const checkUserStatus = async () => {
@@ -59,6 +69,16 @@ const LoginPage = () => {
 
     checkUserStatus();
   }, [setAccount, setRole, router]);
+
+  if (authState.error) {
+    return <div>Error: {authState.error.message}</div>;
+  }
+
+  // Add a loading state
+  if (authState.isLoading) {
+    return <div>Loading...</div>;
+  }
+
 
   const handleConnectWallet = async () => {
     setIsLoading(true);
@@ -212,6 +232,16 @@ const LoginPage = () => {
         <h2 className="text-2xl font-bold text-center mb-6">EduSuplex</h2>
         <p className="text-center mb-8">Lets Deep dive into EduSuplex</p>
         <p className="text-center text-sm mb-4">Connect your wallet to track your progress</p>
+
+
+
+        {authState.isAuthenticated ? (
+            <p>You are logged in! {JSON.stringify(ocAuth.getAuthInfo())}</p>
+
+        ) : (
+            <LoginButton />
+        )}
+
         <button
             onClick={handleCreateWallet}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-4"

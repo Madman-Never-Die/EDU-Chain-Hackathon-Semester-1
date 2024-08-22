@@ -6,6 +6,10 @@ body {
   overscroll-behavior-y: contain;
 }
 
+*{
+  overflow: hidden;
+}
+
 
 .quests-container {
   position: relative;
