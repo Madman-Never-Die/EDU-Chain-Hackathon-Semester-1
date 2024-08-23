@@ -1,12 +1,16 @@
 "use client";
 
-import React, {useState, useEffect, useRef} from "react";
-import {MetaMaskInpageProvider} from "@metamask/providers";
-import {useRouter} from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
+import { MetaMaskInpageProvider } from "@metamask/providers";
+import { useRouter } from "next/navigation";
 import useQuestList from "@/hooks/quest/useQuestList";
-import {useRecoilState, useRecoilValue} from "recoil";
-import {accountState} from "@/recoil/account";
-import {roleState} from "@/recoil/role";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { accountState } from "@/recoil/account";
+import { roleState } from "@/recoil/role";
+import QuestComponent from "@/components/QuestComponent";
+import { BrowserProvider, Contract } from 'ethers';
+import EduchainQuizAbi from '../EduchainQuiz.json' assert { type: "json" };
+
 
 declare global {
   interface Window {
@@ -39,78 +43,12 @@ interface Quest {
   questions: Question[];
 }
 
-const QuestComponent = ({ quest, currentQuestion, onDragStart, onDragMove, onDragEnd, onAnswerSelect, onQuestComplete }: {
-  quest: Quest;
-  currentQuestion: number;
-  onDragStart: any;
-  onDragMove: any;
-  onDragEnd: any;
-  onAnswerSelect: (answer: Answer) => void;
-  onQuestComplete: (questId: number) => void;
-}) => {
-  const handleTouchStart = (e: React.TouchEvent) => {
-    onDragStart(e.touches[0]);
-  };
+const EduchainQuizAddress = "0x948B3c65b89DF0B4894ABE91E6D02FE579834F8F"; // 배포된 스마트 컨트랙트 주소
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    onDragMove(e.touches[0]);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    onDragEnd(e);
-  };
-
-  const handleAnswerClick = (answer: Answer) => {
-    if (answer.correctAnswer) {
-      alert("정답!");
-      if (currentQuestion === quest.questions.length - 1) {
-        // 마지막 문제를 맞췄을 때 퀘스트 완료 처리
-        onQuestComplete(quest.id);
-      }
-    } else {
-      alert("틀렸습니다.");
-    }
-    onAnswerSelect(answer);
-  };
-
-  return (
-      <div
-          className="bg-white text-black rounded-lg overflow-hidden w-full h-full"
-          onMouseDown={onDragStart}
-          onMouseMove={onDragMove}
-          onMouseUp={onDragEnd}
-          onMouseLeave={onDragEnd}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          style={{touchAction: 'none'}} // Disable browser handling of all panning and zooming gestures
-      >
-        <div className="bg-gray-300 w-full h-[80%] flex items-center justify-center flex-col p-4">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">{quest.title}</h2>
-          <p className="text-lg sm:text-xl mb-4">{quest.content}</p>
-          <p className="text-lg sm:text-xl">{quest.questions[currentQuestion].question}</p>
-        </div>
-        <div className="w-full h-[20%] flex justify-around bg-gray-900 text-white p-2 sm:p-4">
-          {quest.questions[currentQuestion].answers.map((answer) => (
-              <button
-                  key={answer.id}
-                  className="hover:text-gray-400 text-sm sm:text-base"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent event bubbling
-                    handleAnswerClick(answer);
-                  }}
-              >
-                {answer.content}
-              </button>
-          ))}
-        </div>
-      </div>
-  );
-};
 
 const MainPage = () => {
   const [account, setAccount] = useRecoilState(accountState);
-  const [role, setRole] = useRecoilState(roleState)
+  const [role, setRole] = useRecoilState(roleState);
 
   const router = useRouter();
 
@@ -122,11 +60,41 @@ const MainPage = () => {
 
   const { questList, isLoading, error, fetchQuestList, updateQuestParticipation }: any = useQuestList();
 
+  const [selectedAnswers, setSelectedAnswers] = useState<{[questId: number]: {[questionId: number]: Answer}}>({});
+
+  useEffect(() => {
+    const loadContractData = async () => {
+      if (window.ethereum) {
+        try {
+          const provider = new BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
+          const contract = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
+
+          const address = await signer.getAddress();
+          console.log(address);
+
+          //@ts-ignore
+          const userInfo = await contract.getUserInfo(address);
+          console.log(userInfo);
+        } catch (error) {
+          console.error("Failed to retrieve user info:", error);
+        }
+      } else {
+        console.error("Ethereum object not found");
+      }
+    };
+
+    loadContractData();
+  }, []);
+
+
   const handleQuestComplete = async (questId: number) => {
     try {
-      const updatedQuest = await updateQuestParticipation(questId);
+      const questAnswers = selectedAnswers[questId];
+      const answersArray = Object.values(questAnswers);
+      const updatedQuest = await updateQuestParticipation(questId, answersArray);
       // 로컬 상태 업데이트
-      const updatedQuestList = questList.map((quest: any) =>
+      const updatedQuestList = questList.map((quest: Quest) =>
           quest.id === questId ? { ...quest, participation: updatedQuest.participation } : quest
       );
       // questList 상태 업데이트 함수 호출 (useQuestList 훅에서 제공해야 함)
@@ -209,7 +177,6 @@ const MainPage = () => {
     setScrollDirection(null);
   };
 
-
   const handleNavigation = (url: string) => {
     const protectedRoutes = ["/hacksLiquid", "/community"];
     if (protectedRoutes.includes(url) && !account) {
@@ -237,7 +204,7 @@ const MainPage = () => {
   };
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const {name, value} = event.target;
+    const { name, value } = event.target;
     setPriceRange((prev) => {
       if (name === "min") {
         return [Number(value), prev[1]];
@@ -247,9 +214,23 @@ const MainPage = () => {
     });
   };
 
-  const onAnswerSelect = () => {
-    console.log("")
-  }
+  const onAnswerSelect = (questId: number, questionId: number, answer: Answer) => {
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [questId]: {
+        ...prev[questId],
+        [questionId]: answer
+      }
+    }));
+  };
+
+  const onNavigateQuestion = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && currentQuestion > 0) {
+      setCurrentQuestion(prev => prev - 1);
+    } else if (direction === 'next' && currentQuestion < questList[currentQuest].questions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+    }
+  };
 
   return (
       <div className="flex flex-grow overflow-hidden">
@@ -321,8 +302,9 @@ const MainPage = () => {
 
         {/* Main Content */}
         <main className="flex-grow overflow-y-auto p-4 flex items-center justify-center">
+
           <div className="quests-container h-full flex items-center justify-center">
-            {questList.map((quest: any, questIndex: any) => (
+            {questList.map((quest: Quest, questIndex: number) => (
                 <div
                     key={quest.id}
                     className="quest-component"
@@ -332,27 +314,17 @@ const MainPage = () => {
                       pointerEvents: questIndex === currentQuest ? 'auto' : 'none',
                     }}
                 >
-                  {quest.questions.map((question:any, questionIndex:any) => (
-                      <div
-                          key={question.id}
-                          className="question-component"
-                          style={{
-                            transform: `translateX(${(questionIndex - currentQuestion) * 100}%)`,
-                            opacity: questionIndex === currentQuestion ? 1 : 0,
-                            pointerEvents: questionIndex === currentQuestion ? 'auto' : 'none',
-                          }}
-                      >
-                        <QuestComponent
-                            quest={quest}
-                            currentQuestion={questionIndex}
-                            onDragStart={handleDragStart}
-                            onDragMove={handleDragMove}
-                            onDragEnd={handleDragEnd}
-                            onAnswerSelect={onAnswerSelect}
-                            onQuestComplete={handleQuestComplete}
-                        />
-                      </div>
-                  ))}
+                  <QuestComponent
+                      quest={quest}
+                      currentQuestion={currentQuestion}
+                      selectedAnswers={selectedAnswers[quest.id] || {}}
+                      onDragStart={handleDragStart}
+                      onDragMove={handleDragMove}
+                      onDragEnd={handleDragEnd}
+                      onAnswerSelect={(answer, questionIndex) => onAnswerSelect(quest.id, quest.questions[questionIndex].id, answer)}
+                      onQuestComplete={handleQuestComplete}
+                      onNavigateQuestion={onNavigateQuestion}
+                  />
                 </div>
             ))}
           </div>
