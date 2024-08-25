@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   try {
     const { nickname, walletAddress, roleId } = await request.json()
-    const backendUrl = 'http://localhost:8080'; // 백엔드 서버의 실제 URL로 변경
+    const backendUrl = process.env.BACKEND_API_URL
 
 
     const backendResponse = await fetch(`${backendUrl}/users/create`, {

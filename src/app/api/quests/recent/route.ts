@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const backendUrl = 'http://localhost:8080'; // 백엔드 서버의 실제 URL로 변경
+    const backendUrl = process.env.BACKEND_API_URL
 
     const response = await fetch(`${backendUrl}/quests/recent?walletAddress=${walletAddress}&page=${page}&limit=${limit}`);
 

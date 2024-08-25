@@ -1,18 +1,16 @@
 import { NextResponse } from 'next/server'
 
-export async function POST(request: Request) {
-  const { walletAddress } = await request.json()
+export async function GET(request: Request, {params}:any) {
+  const { walletAddress } = params
 
   try {
     const backendUrl = process.env.BACKEND_API_URL
-
-
-    const backendResponse = await fetch(`${backendUrl}/users/check-wallet`, {
-      method: 'POST',
+    const backendResponse = await fetch(`${backendUrl}/users/${walletAddress}/quests`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ walletAddress }),
+      cache: "no-store"
     })
 
     if (!backendResponse.ok) {

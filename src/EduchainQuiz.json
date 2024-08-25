@@ -20,19 +20,12 @@
         "type": "bool"
       },
       {
-        "internalType": "uint256",
+        "internalType": "bool",
         "name": "",
-        "type": "uint256"
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "like",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -45,6 +38,11 @@
       {
         "internalType": "bool",
         "name": "_hasCompletedQuiz",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "_like",
         "type": "bool"
       }
     ],
@@ -74,9 +72,9 @@
         "type": "bool"
       },
       {
-        "internalType": "uint256",
-        "name": "likes",
-        "type": "uint256"
+        "internalType": "bool",
+        "name": "hasLiked",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

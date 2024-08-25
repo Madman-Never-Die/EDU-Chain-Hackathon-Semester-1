@@ -16,6 +16,8 @@ const UserHeader = ({handleNavigation, handleConnectWallet, isAuthenticated}: an
                 <Image src="/logo.png" alt="Logo" width={50} height={50} className="h-10 mr-6 cursor-pointer"
                        onClick={() => handleNavigation("/")}/>
                 <nav className="space-x-4">
+                  <a onClick={() => handleNavigation("/users/dashboard")} href="#"
+                     className="hover:text-gray-300">Dashbaord</a>
                 </nav>
               </div>
               <div>

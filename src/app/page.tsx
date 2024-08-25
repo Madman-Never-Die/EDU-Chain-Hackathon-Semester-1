@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { MetaMaskInpageProvider } from "@metamask/providers";
-import { useRouter } from "next/navigation";
+import React, {useState, useEffect, useRef} from "react";
+import {MetaMaskInpageProvider} from "@metamask/providers";
+import {useRouter} from "next/navigation";
 import useQuestList from "@/hooks/quest/useQuestList";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { accountState } from "@/recoil/account";
-import { roleState } from "@/recoil/role";
+import {useRecoilState, useRecoilValue} from "recoil";
+import {accountState} from "@/recoil/account";
+import {roleState} from "@/recoil/role";
 import QuestComponent from "@/components/QuestComponent";
-import { BrowserProvider, Contract } from 'ethers';
-import EduchainQuizAbi from '../EduchainQuiz.json' assert { type: "json" };
+import {BrowserProvider, Contract} from 'ethers';
+import EduchainQuizAbi from '../EduchainQuiz.json' assert {type: "json"};
+import EduchainQuizTrackerAbi from '../EduchainQuizTracker.json' assert {type: "json"};
+import {info} from "autoprefixer";
 
 
 declare global {
@@ -41,13 +43,15 @@ interface Quest {
   createdAt: string;
   modifiedAt: string;
   questions: Question[];
+  selectedAnswers: any
 }
 
-const EduchainQuizAddress = "0x948B3c65b89DF0B4894ABE91E6D02FE579834F8F"; // 배포된 스마트 컨트랙트 주소
+const EduchainQuizAddress:any = process.env.NEXT_PUBLIC_QUIZ_SUBMIT_ADDRESS
+const EduchainQuizTrackerAddress: any = process.env.NEXT_PUBLIC_QUIZ_TRACKER
 
 
 const MainPage = () => {
-  const [account, setAccount] = useRecoilState(accountState);
+  const [account, setAccount]: any = useRecoilState(accountState);
   const [role, setRole] = useRecoilState(roleState);
 
   const router = useRouter();
@@ -58,47 +62,86 @@ const MainPage = () => {
   const startPosRef = useRef({x: 0, y: 0});
   const [scrollDirection, setScrollDirection] = useState<string | null>(null);
 
-  const { questList, isLoading, error, fetchQuestList, updateQuestParticipation }: any = useQuestList();
+  const {questList, isLoading, error, fetchQuestList, updateQuestParticipation}: any = useQuestList();
 
-  const [selectedAnswers, setSelectedAnswers] = useState<{[questId: number]: {[questionId: number]: Answer}}>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [questId: number]: { [questionId: number]: Answer } }>({});
+
 
   useEffect(() => {
-    const loadContractData = async () => {
+    const contractTest = async () => {
+
+      try{
+        if (window.ethereum) {
+          try {
+            const provider = new BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const contract: any = new Contract(EduchainQuizTrackerAddress, EduchainQuizTrackerAbi, signer);
+
+            const infoResult = await contract.getStats()
+            console.log("#", infoResult)
+          }catch(e){
+          }
+        }
+      }catch(e){
+        console.error(e)
+      }
+
+
+    }
+
+    contractTest()
+  }, []);
+
+
+  const handleQuestComplete = async (questId: number, isLiked: boolean) => {
+    try {
+      // 컨트랙트 콜
       if (window.ethereum) {
         try {
           const provider = new BrowserProvider(window.ethereum);
           const signer = await provider.getSigner();
-          const contract = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
+          const contract: any = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
 
           const address = await signer.getAddress();
           console.log(address);
+          console.log(selectedAnswers)
 
-          //@ts-ignore
-          const userInfo = await contract.getUserInfo(address);
-          console.log(userInfo);
+          let correctAnswers: number = 0
+          // 바깥쪽 객체를 순회
+          for (const key in selectedAnswers) {
+            if (selectedAnswers.hasOwnProperty(key)) {
+              const innerObj = selectedAnswers[key];
+
+              // 안쪽 객체를 순회
+              for (const innerKey in innerObj) {
+                if (innerObj.hasOwnProperty(innerKey)) {
+                  const item = innerObj[innerKey];
+
+                  // correctAnswer가 true인지 확인하고 카운트 증가
+                  if (item.correctAnswer === true) {
+                    correctAnswers++;
+                  }
+                }
+              }
+            }
+          }
+
+
+          console.log(correctAnswers)
+          let hasCompletedQuiz: boolean = true
+
+          const submitResult = await contract.submitQuizResult(correctAnswers, hasCompletedQuiz, isLiked)
+          console.log(submitResult)
+
+          const infoResult = await contract.getUserInfo(address)
+          console.log(infoResult)
+
         } catch (error) {
           console.error("Failed to retrieve user info:", error);
         }
       } else {
         console.error("Ethereum object not found");
       }
-    };
-
-    loadContractData();
-  }, []);
-
-
-  const handleQuestComplete = async (questId: number) => {
-    try {
-      const questAnswers = selectedAnswers[questId];
-      const answersArray = Object.values(questAnswers);
-      const updatedQuest = await updateQuestParticipation(questId, answersArray);
-      // 로컬 상태 업데이트
-      const updatedQuestList = questList.map((quest: Quest) =>
-          quest.id === questId ? { ...quest, participation: updatedQuest.participation } : quest
-      );
-      // questList 상태 업데이트 함수 호출 (useQuestList 훅에서 제공해야 함)
-      // 예: setQuestList(updatedQuestList);
     } catch (error) {
       console.error("Failed to update quest participation:", error);
     }
@@ -138,7 +181,7 @@ const MainPage = () => {
     setIsDragging(true);
     startPosRef.current = {
       x: e.clientX || e.pageX,
-      y: e.clientY || e.pageY
+      y: e.clientY || e.pageY,
     };
     setScrollDirection(null);
   };
@@ -153,18 +196,18 @@ const MainPage = () => {
 
     if (scrollDirection === null) {
       if (Math.abs(diffX) > Math.abs(diffY)) {
-        setScrollDirection('horizontal');
+        setScrollDirection("horizontal");
       } else {
-        setScrollDirection('vertical');
+        setScrollDirection("vertical");
       }
     }
 
-    if (scrollDirection === 'horizontal') {
+    if (scrollDirection === "horizontal") {
       if (Math.abs(diffX) > 50) {
         handleScroll(diffX > 0 ? "right" : "left");
         setIsDragging(false);
       }
-    } else if (scrollDirection === 'vertical') {
+    } else if (scrollDirection === "vertical") {
       if (Math.abs(diffY) > 50) {
         handleScroll(diffY > 0 ? "down" : "up");
         setIsDragging(false);
@@ -175,6 +218,15 @@ const MainPage = () => {
   const handleDragEnd = () => {
     setIsDragging(false);
     setScrollDirection(null);
+  };
+  const handleVerticalDrag = (direction: 'up' | 'down') => {
+    if (direction === 'up' && currentQuest > 0) {
+      setCurrentQuest(prev => prev - 1);
+      setCurrentQuestion(0);
+    } else if (direction === 'down' && currentQuest < questList.length - 1) {
+      setCurrentQuest(prev => prev + 1);
+      setCurrentQuestion(0);
+    }
   };
 
   const handleNavigation = (url: string) => {
@@ -204,7 +256,7 @@ const MainPage = () => {
   };
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
+    const {name, value} = event.target;
     setPriceRange((prev) => {
       if (name === "min") {
         return [Number(value), prev[1]];
@@ -302,7 +354,6 @@ const MainPage = () => {
 
         {/* Main Content */}
         <main className="flex-grow overflow-y-auto p-4 flex items-center justify-center">
-
           <div className="quests-container h-full flex items-center justify-center">
             {questList.map((quest: Quest, questIndex: number) => (
                 <div
@@ -318,12 +369,17 @@ const MainPage = () => {
                       quest={quest}
                       currentQuestion={currentQuestion}
                       selectedAnswers={selectedAnswers[quest.id] || {}}
-                      onDragStart={handleDragStart}
-                      onDragMove={handleDragMove}
-                      onDragEnd={handleDragEnd}
-                      onAnswerSelect={(answer, questionIndex) => onAnswerSelect(quest.id, quest.questions[questionIndex].id, answer)}
+                      // onDragStart={handleDragStart}
+                      // onDragMove={handleDragMove}
+                      // onDragEnd={handleDragEnd}
+                      onAnswerSelect={
+                        (answer, questionIndex) => onAnswerSelect(quest.id, quest.questions[questionIndex].id, answer)
+                      }
                       onQuestComplete={handleQuestComplete}
                       onNavigateQuestion={onNavigateQuestion}
+                      userWalletAddress={account} // 여기에 사용자의 지갑 주소를 전달
+                      onVerticalDrag={handleVerticalDrag}
+
                   />
                 </div>
             ))}

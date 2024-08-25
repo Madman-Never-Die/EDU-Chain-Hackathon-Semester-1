@@ -24,7 +24,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const {authState, ocAuth} = useOCAuth();
+  const {authState, ocAuth}: any = useOCAuth();
 
 
   useEffect(() => {
