@@ -101,6 +101,7 @@ const MainPage = () => {
           const provider = new BrowserProvider(window.ethereum);
           const signer = await provider.getSigner();
           const contract: any = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
+          const contract2: any = new Contract(EduchainQuizTrackerAddress, EduchainQuizTrackerAbi, signer);
 
           const address = await signer.getAddress();
           console.log(address);
@@ -135,6 +136,10 @@ const MainPage = () => {
 
           const infoResult = await contract.getUserInfo(address)
           console.log(infoResult)
+
+
+          const updateInfo = await contract2.updateStats()
+          console.log(updateInfo)
 
         } catch (error) {
           console.error("Failed to retrieve user info:", error);
