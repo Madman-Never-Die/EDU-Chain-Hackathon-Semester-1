@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, {useState} from "react";
 import {useRecoilState} from "recoil";
 import {accountState} from "@/recoil/account";
+import QuestProviderAbi from '../../../QuestProvider.json' assert {type: "json"};
+import {BrowserProvider, Contract} from "ethers";
+import EduchainQuizAbi from "@/EduchainQuiz.json";
+import EduchainQuizTrackerAbi from "@/EduchainQuizTracker.json";
+
+const QuestProviderAddress: any = process.env.NEXT_PUBLIC_QUEST_PROVIDER_ADDRESS
 
 const CreateQuest = () => {
   const [account, setAccount] = useRecoilState(accountState);
@@ -11,16 +17,16 @@ const CreateQuest = () => {
   const [protocolContent, setProtocolContent] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState({
     question: "",
-    answers: [{ content: "" }, { content: "" }],
+    answers: [{content: ""}, {content: ""}],
     correctAnswer: 0
   });
-  const [questions, setQuestions]:any = useState([]);
+  const [questions, setQuestions]: any = useState([]);
 
   const handleAddAnswer = () => {
     if (currentQuestion.answers.length < 4) {
       setCurrentQuestion({
         ...currentQuestion,
-        answers: [...currentQuestion.answers, { content: "" }],
+        answers: [...currentQuestion.answers, {content: ""}],
       });
     }
   };
@@ -28,7 +34,7 @@ const CreateQuest = () => {
   const handleAnswerChange = (index: any, value: any) => {
     const newAnswers = [...currentQuestion.answers];
     newAnswers[index].content = value;
-    setCurrentQuestion({ ...currentQuestion, answers: newAnswers });
+    setCurrentQuestion({...currentQuestion, answers: newAnswers});
   };
 
   const handleAddQuestion = () => {
@@ -36,12 +42,11 @@ const CreateQuest = () => {
       setQuestions([...questions, currentQuestion]);
       setCurrentQuestion({
         question: "",
-        answers: [{ content: "" }, { content: "" }],
+        answers: [{content: ""}, {content: ""}],
         correctAnswer: 0,
       });
     }
   };
-
 
 
   const handleSubmit = async () => {
@@ -53,8 +58,6 @@ const CreateQuest = () => {
       type: "network",
       questions
     };
-
-
     try {
       const response = await fetch('/api/createQuest', {
         method: 'POST',
@@ -66,7 +69,25 @@ const CreateQuest = () => {
 
       if (response.ok) {
         alert('Quest created successfully!');
-        // Reset form or redirect user
+        try {
+          // 컨트랙트 콜
+          if (window.ethereum) {
+            try {
+              const provider = new BrowserProvider(window.ethereum);
+              const signer = await provider.getSigner();
+              const contract: any = new Contract(QuestProviderAddress, QuestProviderAbi, signer);
+              const address = await signer.getAddress();
+              const questInsertInfo = await response.json()
+              const result = await contract.updateQuestStatus(address, questInsertInfo.id, false);
+            } catch (e) {
+              console.error(e)
+            }
+          }
+        } catch (e) {
+          console.error(e)
+        }
+
+
       } else {
         alert('Failed to create quest');
       }
@@ -96,7 +117,8 @@ const CreateQuest = () => {
             <div>
               <label className="block text-lg font-semibold mb-2">Protocol Content</label>
               <p className="text-gray-400 mb-2">
-                The following is a rich text editor. You can use it to format the content of your protocol. For example, you can add headers, lists, and images. You can also add links to external sources.
+                The following is a rich text editor. You can use it to format the content of your protocol. For example,
+                you can add headers, lists, and images. You can also add links to external sources.
               </p>
               <textarea
                   value={protocolContent}
@@ -168,7 +190,8 @@ const CreateQuest = () => {
           </div>
         </main>
 
-        <aside className="w-full lg:w-1/3 p-4 sm:p-8 bg-gray-800 border-t lg:border-l lg:border-t-0 border-gray-700 overflow-y-auto">
+        <aside
+            className="w-full lg:w-1/3 p-4 sm:p-8 bg-gray-800 border-t lg:border-l lg:border-t-0 border-gray-700 overflow-y-auto">
           <h2 className="text-xl font-bold mb-6">Quiz Preview</h2>
           <p className="text-gray-400 mb-6">
             This is how your quiz will look to students. You can add as many questions as you`&apos;`,d like.

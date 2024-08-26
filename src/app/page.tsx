@@ -46,7 +46,7 @@ interface Quest {
   selectedAnswers: any
 }
 
-const EduchainQuizAddress:any = process.env.NEXT_PUBLIC_QUIZ_SUBMIT_ADDRESS
+const EduchainQuizAddress: any = process.env.NEXT_PUBLIC_QUIZ_SUBMIT_ADDRESS
 const EduchainQuizTrackerAddress: any = process.env.NEXT_PUBLIC_QUIZ_TRACKER
 
 
@@ -65,32 +65,6 @@ const MainPage = () => {
   const {questList, isLoading, error, fetchQuestList, updateQuestParticipation}: any = useQuestList();
 
   const [selectedAnswers, setSelectedAnswers] = useState<{ [questId: number]: { [questionId: number]: Answer } }>({});
-
-
-  useEffect(() => {
-    const contractTest = async () => {
-
-      try{
-        if (window.ethereum) {
-          try {
-            const provider = new BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const contract: any = new Contract(EduchainQuizTrackerAddress, EduchainQuizTrackerAbi, signer);
-
-            const infoResult = await contract.getStats()
-            console.log("#", infoResult)
-          }catch(e){
-          }
-        }
-      }catch(e){
-        console.error(e)
-      }
-
-
-    }
-
-    contractTest()
-  }, []);
 
 
   const handleQuestComplete = async (questId: number, isLiked: boolean) => {
@@ -384,6 +358,7 @@ const MainPage = () => {
                       onNavigateQuestion={onNavigateQuestion}
                       userWalletAddress={account} // 여기에 사용자의 지갑 주소를 전달
                       onVerticalDrag={handleVerticalDrag}
+                      currentQuest={currentQuest}
 
                   />
                 </div>

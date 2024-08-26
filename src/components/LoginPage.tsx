@@ -164,19 +164,19 @@ const LoginPage = () => {
           <RoleCard
               title="Protocol Provider"
               description="Develop and deploy smart contract tech"
-              imageSrc="/protocol-provider.jpg"
+              imageSrc="/images/protocol_provider.png"
               onClick={() => handleRoleSelect("Protocol Provider")}
           />
           <RoleCard
               title="Quest Provider"
               description="Design and launch quests on the blockchain"
-              imageSrc="/quest-provider.jpg"
+              imageSrc="/images/quest_provider.png"
               onClick={() => handleRoleSelect("Quest Provider")}
           />
           <RoleCard
               title="User"
               description="Earn crypto by completing quests"
-              imageSrc="/user.jpg"
+              imageSrc="/images/user.png"
               onClick={() => handleRoleSelect("User")}
           />
         </div>

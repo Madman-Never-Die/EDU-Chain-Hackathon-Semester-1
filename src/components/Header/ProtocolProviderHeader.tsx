@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 
 const ProtocolProviderHeader = ({handleNavigation}: any) => {
 
@@ -6,7 +7,8 @@ const ProtocolProviderHeader = ({handleNavigation}: any) => {
       <>
         <header className="p-4 flex justify-between items-center border-b border-gray-800">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => handleNavigation("/")}>
-            <div className="w-8 h-8 bg-white rounded"></div>
+            <Image src="/images/edusuplex_logo.png" alt="Logo" width={50} height={50} className="h-10 mr-6 cursor-pointer"
+                   onClick={() => handleNavigation("/")}/>
             <span className="text-xl font-bold">EduSuplex</span>
           </div>
           <nav className="hidden md:flex space-x-6">

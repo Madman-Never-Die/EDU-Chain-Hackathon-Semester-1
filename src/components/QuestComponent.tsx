@@ -1,4 +1,9 @@
 import React, {useState, useEffect, useRef} from 'react';
+import {BrowserProvider, Contract} from 'ethers';
+import EduchainQuizTrackerAbi from '../EduchainQuizTracker.json' assert {type: "json"};
+import QuestProviderAbi from '../QuestProvider.json' assert {type: "json"};
+import {structuredClone} from "next/dist/compiled/@edge-runtime/primitives";
+
 
 interface Answer {
   id: number;
@@ -67,6 +72,8 @@ const ShareIcon = () => (
       <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
     </svg>
 );
+const EduchainQuizTrackerAddress: any = process.env.NEXT_PUBLIC_QUIZ_TRACKER
+const QuestProviderAddress: any = process.env.NEXT_PUBLIC_QUEST_PROVIDER_ADDRESS
 
 const QuestComponent = ({
                           quest,
@@ -77,6 +84,7 @@ const QuestComponent = ({
                           onNavigateQuestion,
                           onVerticalDrag,
                           userWalletAddress,
+                          currentQuest
                         }: {
   quest: any;
   currentQuestion: number;
@@ -86,6 +94,7 @@ const QuestComponent = ({
   onNavigateQuestion: (direction: 'prev' | 'next') => void;
   onVerticalDrag: (direction: 'up' | 'down') => void;
   userWalletAddress: string;
+  currentQuest: any
 }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
@@ -102,10 +111,43 @@ const QuestComponent = ({
 
   useEffect(() => {
     if (quest) {
-      fetchLikeDislikeStatus();
-      incrementViewCount();
+
+      // fetchLikeDislikeStatus();
+      // incrementViewCount();
     }
   }, [quest?.id]);
+
+  const getStatsContact = async () => {
+    try {
+      if (window.ethereum) {
+        try {
+          const provider = new BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
+          const contract: any = new Contract(EduchainQuizTrackerAddress, EduchainQuizTrackerAbi, signer);
+          const infoResult = await contract.getStats()
+
+
+          const questProviderContract: any = new Contract(QuestProviderAddress, QuestProviderAbi, signer);
+          console.log(quest.id)
+          const result = await questProviderContract.getQuestSubmissionInfo(quest.id, quest.provider)
+          console.log(result)
+
+          // const totalViews = Number(infoResult[0])
+          // const totalLikes = Number(infoResult[1])
+          // setViews(totalViews)
+          // setLikes(totalLikes)
+        } catch (e) {
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+
+  useEffect(() => {
+    getStatsContact()
+  }, [currentQuest]);
 
   const fetchLikeDislikeStatus = async () => {
     if (!quest) return;
@@ -113,6 +155,7 @@ const QuestComponent = ({
       const response = await fetch(`/api/quests/${quest.id}/like-status?userWalletAddress=${userWalletAddress}`);
       if (response.ok) {
         const data = await response.json();
+        console.log(data)
         setIsLiked(data.isLiked);
         setIsDisliked(data.isDisliked);
         setLikes(data.likes);
