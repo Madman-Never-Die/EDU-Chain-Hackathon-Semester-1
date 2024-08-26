@@ -160,9 +160,12 @@ const QuestComponent = ({
           const signer = await provider.getSigner();
 
           const contract: any = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
+          console.log("contract : ", contract)
           const questProviderContract: any = new Contract(QuestProviderAddress, QuestProviderAbi, signer);
+          console.log("questProviderContract : ", questProviderContract)
 
           const result = await questProviderContract.getQuestSubmissionInfo(quest.id, quest.provider)
+          console.log("result : ", result)
 
           const isVerification = result[2]
 
@@ -178,10 +181,10 @@ const QuestComponent = ({
           }
 
           const infoResult = await contract.getQuestStats(quest.id)
-          console.log("#", infoResult)
+          console.log("infoResult : ", infoResult)
 
           const userResult = await contract.getUserInfo(userWalletAddress)
-          console.log(userResult)
+          console.log("userResult : ", userResult)
 
           const totalViews = Number(quest.participation)
           const totalLikes = Number(quest.likes)
@@ -189,10 +192,12 @@ const QuestComponent = ({
           setLikes(totalLikes)
         } catch (e) {
           console.error(e)
+          console.error(e.message)
         }
       }
     } catch (e) {
       console.error(e)
+      console.error(e.message)
     }
   }
 

@@ -73,7 +73,7 @@ const MainPage = () => {
           const contract: any = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
 
           const address = await signer.getAddress();
-          console.log(address);
+          console.log("address : ", address);
           console.log(selectedAnswers)
 
           let correctAnswers: number = 0
@@ -97,14 +97,13 @@ const MainPage = () => {
           }
 
 
-          console.log(correctAnswers)
           let hasCompletedQuiz: boolean = true
 
           const submitResult = await contract.submitQuizResult(questId, correctAnswers, hasCompletedQuiz, isLiked)
-          console.log(submitResult)
+          console.log("submitResult : ", submitResult)
 
           const infoResult = await contract.getUserInfo(address)
-          console.log(infoResult)
+          console.log("infoResult : ", infoResult)
 
 
         } catch (error) {
