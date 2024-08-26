@@ -5,9 +5,6 @@ import {useRecoilState} from "recoil";
 import {accountState} from "@/recoil/account";
 import QuestProviderAbi from '../../../QuestProvider.json' assert {type: "json"};
 import {BrowserProvider, Contract} from "ethers";
-import EduchainQuizAbi from "@/EduchainQuiz.json";
-import EduchainQuizTrackerAbi from "@/EduchainQuizTracker.json";
-
 const QuestProviderAddress: any = process.env.NEXT_PUBLIC_QUEST_PROVIDER_ADDRESS
 
 const CreateQuest = () => {
@@ -79,6 +76,7 @@ const CreateQuest = () => {
               const address = await signer.getAddress();
               const questInsertInfo = await response.json()
               const result = await contract.updateQuestStatus(address, questInsertInfo.id, false);
+              console.log(result)
             } catch (e) {
               console.error(e)
             }

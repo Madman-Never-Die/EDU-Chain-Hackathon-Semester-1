@@ -3,6 +3,60 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_questProviderAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getQuestProviderAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getQuestStats",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_user",
         "type": "address"
       }
@@ -30,6 +84,43 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questId",
+        "type": "uint256"
+      }
+    ],
+    "name": "hasLikedQuest",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "questProvider",
+    "outputs": [
+      {
+        "internalType": "contract QuestProvider",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questId",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "_correctAnswers",

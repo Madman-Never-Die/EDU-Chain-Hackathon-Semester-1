@@ -10,8 +10,6 @@ import {roleState} from "@/recoil/role";
 import QuestComponent from "@/components/QuestComponent";
 import {BrowserProvider, Contract} from 'ethers';
 import EduchainQuizAbi from '../EduchainQuiz.json' assert {type: "json"};
-import EduchainQuizTrackerAbi from '../EduchainQuizTracker.json' assert {type: "json"};
-import {info} from "autoprefixer";
 
 
 declare global {
@@ -47,8 +45,6 @@ interface Quest {
 }
 
 const EduchainQuizAddress: any = process.env.NEXT_PUBLIC_QUIZ_SUBMIT_ADDRESS
-const EduchainQuizTrackerAddress: any = process.env.NEXT_PUBLIC_QUIZ_TRACKER
-
 
 const MainPage = () => {
   const [account, setAccount]: any = useRecoilState(accountState);
@@ -62,7 +58,7 @@ const MainPage = () => {
   const startPosRef = useRef({x: 0, y: 0});
   const [scrollDirection, setScrollDirection] = useState<string | null>(null);
 
-  const {questList, isLoading, error, fetchQuestList, updateQuestParticipation}: any = useQuestList();
+  const {questList, setQuestList, isLoading, error, fetchQuestList, updateQuestParticipation}: any = useQuestList();
 
   const [selectedAnswers, setSelectedAnswers] = useState<{ [questId: number]: { [questionId: number]: Answer } }>({});
 
@@ -75,7 +71,6 @@ const MainPage = () => {
           const provider = new BrowserProvider(window.ethereum);
           const signer = await provider.getSigner();
           const contract: any = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
-          const contract2: any = new Contract(EduchainQuizTrackerAddress, EduchainQuizTrackerAbi, signer);
 
           const address = await signer.getAddress();
           console.log(address);
@@ -105,15 +100,12 @@ const MainPage = () => {
           console.log(correctAnswers)
           let hasCompletedQuiz: boolean = true
 
-          const submitResult = await contract.submitQuizResult(correctAnswers, hasCompletedQuiz, isLiked)
+          const submitResult = await contract.submitQuizResult(questId, correctAnswers, hasCompletedQuiz, isLiked)
           console.log(submitResult)
 
           const infoResult = await contract.getUserInfo(address)
           console.log(infoResult)
 
-
-          const updateInfo = await contract2.updateStats()
-          console.log(updateInfo)
 
         } catch (error) {
           console.error("Failed to retrieve user info:", error);
@@ -264,104 +256,46 @@ const MainPage = () => {
   };
 
   return (
-      <div className="flex flex-grow overflow-hidden">
-        {/* Sidebar */}
-        <aside className="w-64 flex-shrink-0 bg-gray-800 border-r border-gray-700 overflow-y-auto">
-          <div className="p-4">
-            <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="w-full p-2 bg-gray-900 text-gray-200 rounded-md"
-            />
-          </div>
-          <div className="mb-4">
-            <h3 className="font-semibold mb-2">Categories</h3>
-            <label className="block mb-2">
-              <input
-                  type="checkbox"
-                  value="Category1"
-                  checked={selectedCategories.includes("Category1")}
-                  onChange={() => handleCategoryChange("Category1")}
-              />
-              <span className="ml-2">Category1</span>
-            </label>
-            <label className="block mb-2">
-              <input
-                  type="checkbox"
-                  value="Category2"
-                  checked={selectedCategories.includes("Category2")}
-                  onChange={() => handleCategoryChange("Category2")}
-              />
-              <span className="ml-2">Category2</span>
-            </label>
-            <label className="block mb-2">
-              <input
-                  type="checkbox"
-                  value="Category3"
-                  checked={selectedCategories.includes("Category3")}
-                  onChange={() => handleCategoryChange("Category3")}
-              />
-              <span className="ml-2">Category3</span>
-            </label>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Price Range</h3>
-            <label className="block mb-2">
-              Min:
-              <input
-                  type="number"
-                  name="min"
-                  value={priceRange[0]}
-                  onChange={handlePriceChange}
-                  className="w-full p-2 bg-gray-900 text-gray-200 rounded-md"
-              />
-            </label>
-            <label className="block mb-2">
-              Max:
-              <input
-                  type="number"
-                  name="max"
-                  value={priceRange[1]}
-                  onChange={handlePriceChange}
-                  className="w-full p-2 bg-gray-900 text-gray-200 rounded-md"
-              />
-            </label>
-          </div>
-        </aside>
-
-        {/* Main Content */}
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex justify-center">
+          {questList.length > 0 && (
+              <div>
+                <span style={{color: "white", fontSize: "32px", zIndex: 99999999999}}>{currentQuestion + 1} / {questList[currentQuest].questions.length}</span>
+              </div>
+          )}
+        </div>
         <main className="flex-grow overflow-y-auto p-4 flex items-center justify-center">
           <div className="quests-container h-full flex items-center justify-center">
             {questList.map((quest: Quest, questIndex: number) => (
-                <div
-                    key={quest.id}
-                    className="quest-component"
-                    style={{
-                      transform: `translateY(${(questIndex - currentQuest) * 100}%)`,
-                      opacity: questIndex === currentQuest ? 1 : 0,
-                      pointerEvents: questIndex === currentQuest ? 'auto' : 'none',
-                    }}
-                >
-                  <QuestComponent
-                      quest={quest}
-                      currentQuestion={currentQuestion}
-                      selectedAnswers={selectedAnswers[quest.id] || {}}
-                      // onDragStart={handleDragStart}
-                      // onDragMove={handleDragMove}
-                      // onDragEnd={handleDragEnd}
-                      onAnswerSelect={
-                        (answer, questionIndex) => onAnswerSelect(quest.id, quest.questions[questionIndex].id, answer)
-                      }
-                      onQuestComplete={handleQuestComplete}
-                      onNavigateQuestion={onNavigateQuestion}
-                      userWalletAddress={account} // 여기에 사용자의 지갑 주소를 전달
-                      onVerticalDrag={handleVerticalDrag}
-                      currentQuest={currentQuest}
+                <>
+                  <div
+                      key={quest.id}
+                      className="quest-component"
+                      style={{
+                        transform: `translateY(${(questIndex - currentQuest) * 100}%)`,
+                        opacity: questIndex === currentQuest ? 1 : 0,
+                        pointerEvents: questIndex === currentQuest ? 'auto' : 'none',
+                        borderRadius:"16px"
+                      }}
+                  >
+                    <QuestComponent
+                        quest={quest}
+                        currentQuestion={currentQuestion}
+                        selectedAnswers={selectedAnswers[quest.id] || {}}
+                        onAnswerSelect={
+                          (answer, questionIndex) => onAnswerSelect(quest.id, quest.questions[questionIndex].id, answer)
+                        }
+                        onQuestComplete={handleQuestComplete}
+                        onNavigateQuestion={onNavigateQuestion}
+                        userWalletAddress={account} // 여기에 사용자의 지갑 주소를 전달
+                        onVerticalDrag={handleVerticalDrag}
+                        currentQuest={currentQuest}
+                        questList={questList}
+                        setQuestList={setQuestList}
 
-                  />
-                </div>
+                    />
+                  </div>
+                </>
             ))}
           </div>
         </main>

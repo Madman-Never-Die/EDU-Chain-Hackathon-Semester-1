@@ -1,8 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {BrowserProvider, Contract} from 'ethers';
-import EduchainQuizTrackerAbi from '../EduchainQuizTracker.json' assert {type: "json"};
+import EduchainQuizAbi from '../EduchainQuiz.json' assert {type: "json"};
 import QuestProviderAbi from '../QuestProvider.json' assert {type: "json"};
-import {structuredClone} from "next/dist/compiled/@edge-runtime/primitives";
+import {any} from "prop-types";
 
 
 interface Answer {
@@ -73,6 +73,7 @@ const ShareIcon = () => (
     </svg>
 );
 const EduchainQuizTrackerAddress: any = process.env.NEXT_PUBLIC_QUIZ_TRACKER
+const EduchainQuizAddress: any = process.env.NEXT_PUBLIC_QUIZ_SUBMIT_ADDRESS
 const QuestProviderAddress: any = process.env.NEXT_PUBLIC_QUEST_PROVIDER_ADDRESS
 
 const QuestComponent = ({
@@ -84,7 +85,9 @@ const QuestComponent = ({
                           onNavigateQuestion,
                           onVerticalDrag,
                           userWalletAddress,
-                          currentQuest
+                          currentQuest,
+                          questList,
+                          setQuestList
                         }: {
   quest: any;
   currentQuestion: number;
@@ -94,7 +97,9 @@ const QuestComponent = ({
   onNavigateQuestion: (direction: 'prev' | 'next') => void;
   onVerticalDrag: (direction: 'up' | 'down') => void;
   userWalletAddress: string;
-  currentQuest: any
+  currentQuest: any;
+  questList: any;
+  setQuestList: any;
 }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
@@ -117,26 +122,73 @@ const QuestComponent = ({
     }
   }, [quest?.id]);
 
+  async function deleteQuest(questId: number) {
+    try {
+      const response = await fetch(`/api/quests/${questId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+          // 필요한 경우 인증 헤더 추가
+          // 'Authorization': `Bearer ${your_token_here}`
+        },
+      });
+
+      if (response.ok) {
+        // 삭제 성공
+        console.log('Quest deleted successfully');
+        // 여기에 성공 후 수행할 작업 추가 (예: 상태 업데이트, 사용자에게 알림 등)
+        return true;
+      } else {
+        // 서버에서 오류 응답을 받은 경우
+        const errorData = await response.json();
+        console.error('Failed to delete quest:', errorData);
+        // 오류 처리 로직 추가
+        return false;
+      }
+    } catch (error) {
+      // 네트워크 오류 등의 예외 처리
+      console.error('Error deleting quest:', error);
+      // 오류 처리 로직 추가
+      return false;
+    }
+  }
   const getStatsContact = async () => {
     try {
       if (window.ethereum) {
         try {
           const provider = new BrowserProvider(window.ethereum);
           const signer = await provider.getSigner();
-          const contract: any = new Contract(EduchainQuizTrackerAddress, EduchainQuizTrackerAbi, signer);
-          const infoResult = await contract.getStats()
 
-
+          const contract: any = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
           const questProviderContract: any = new Contract(QuestProviderAddress, QuestProviderAbi, signer);
-          console.log(quest.id)
-          const result = await questProviderContract.getQuestSubmissionInfo(quest.id, quest.provider)
-          console.log(result)
 
-          // const totalViews = Number(infoResult[0])
-          // const totalLikes = Number(infoResult[1])
-          // setViews(totalViews)
-          // setLikes(totalLikes)
+          const result = await questProviderContract.getQuestSubmissionInfo(quest.id, quest.provider)
+
+          const isVerification = result[2]
+
+          if(!isVerification){
+            const deleteResult: any = await deleteQuest(quest.id);
+            if (deleteResult) {
+              const newQuestList = questList.filter((q: any) => q.id !== quest.id);
+              setQuestList([...newQuestList])
+            } else {
+              // 삭제 실패 시 수행할 작업
+              // 예: 사용자에게 오류 메시지 표시
+            }
+          }
+
+          const infoResult = await contract.getQuestStats(quest.id)
+          console.log("#", infoResult)
+
+          const userResult = await contract.getUserInfo(userWalletAddress)
+          console.log(userResult)
+
+          const totalViews = Number(quest.participation)
+          const totalLikes = Number(quest.likes)
+          setViews(totalViews)
+          setLikes(totalLikes)
         } catch (e) {
+          console.error(e)
         }
       }
     } catch (e) {
@@ -358,9 +410,6 @@ const QuestComponent = ({
             transition: isDragging ? 'none' : 'transform 0.3s ease-out',
           }}
       >
-        <div className="bg-gray-200 p-2 text-center">
-          <span>{currentQuestion + 1} / {quest.questions.length}</span>
-        </div>
         <div className="bg-gray-300 flex-grow flex items-center justify-center flex-col p-4">
           <h2 className="text-xl sm:text-2xl font-bold mb-4">{quest.title}</h2>
           <p className="text-lg sm:text-xl mb-4">{quest.content}</p>

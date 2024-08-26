@@ -64,7 +64,7 @@ const useQuestList = () => {
     return () => clearInterval(intervalId);
   }, [fetchQuestList]);
 
-  return { questList, isLoading, error, fetchQuestList, updateQuestParticipation };
+  return { questList, setQuestList, isLoading, error, fetchQuestList, updateQuestParticipation };
 };
 
 export default useQuestList;
