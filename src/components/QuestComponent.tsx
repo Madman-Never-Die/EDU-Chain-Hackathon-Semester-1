@@ -190,12 +190,12 @@ const QuestComponent = ({
           const totalLikes = Number(quest.likes)
           setViews(totalViews)
           setLikes(totalLikes)
-        } catch (e) {
+        } catch (e: any) {
           console.error(e)
           console.error(e.message)
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
       console.error(e.message)
     }
