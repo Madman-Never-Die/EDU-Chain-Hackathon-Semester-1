@@ -11,6 +11,7 @@ const CreateQuest = () => {
   const [account, setAccount] = useRecoilState(accountState);
 
   const [questTitle, setQuestTitle] = useState("");
+  const [researchPaperUrl, setResearchPaperUrl] = useState("");
   const [protocolContent, setProtocolContent] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState({
     question: "",
@@ -49,6 +50,7 @@ const CreateQuest = () => {
   const handleSubmit = async () => {
     const questData = {
       title: questTitle,
+      paper_url: researchPaperUrl,
       content: protocolContent,
       liquidity_provider: "arbitrum",
       provider: account,
@@ -108,6 +110,17 @@ const CreateQuest = () => {
                   value={questTitle}
                   onChange={(e) => setQuestTitle(e.target.value)}
                   placeholder="Enter your quest title here"
+                  className="w-full p-3 bg-gray-800 text-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold mb-2">Research Paper Url</label>
+              <input
+                  type="text"
+                  value={researchPaperUrl}
+                  onChange={(e) => setResearchPaperUrl(e.target.value)}
+                  placeholder="Enter your research paper URL here"
                   className="w-full p-3 bg-gray-800 text-gray-300 rounded-lg"
               />
             </div>

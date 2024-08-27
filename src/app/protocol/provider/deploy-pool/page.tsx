@@ -164,16 +164,16 @@ const DeployPoolPage = () => {
             {
                 selectedMenu === "manage" &&
                 <>
-                  {['EDU', 'ETH', 'ARB'].map((token) => (
-                      <div key={token} className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gray-700 rounded-lg mr-4"></div>
-                        <div>
-                          <h3 className="font-bold">{token}</h3>
-                          <p className="text-gray-400">0.5%</p>
-                          <p className="text-gray-400">Token Balance: 10,000</p>
-                        </div>
-                      </div>
-                  ))}
+                  {/*{['EDU', 'ETH', 'ARB'].map((token) => (*/}
+                  {/*    <div key={token} className="flex items-center mb-4">*/}
+                  {/*      <div className="w-12 h-12 bg-gray-700 rounded-lg mr-4"></div>*/}
+                  {/*      <div>*/}
+                  {/*        <h3 className="font-bold">{token}</h3>*/}
+                  {/*        <p className="text-gray-400">0.5%</p>*/}
+                  {/*        <p className="text-gray-400">Token Balance: 10,000</p>*/}
+                  {/*      </div>*/}
+                  {/*    </div>*/}
+                  {/*))}*/}
                 </>
             }
 
@@ -181,16 +181,16 @@ const DeployPoolPage = () => {
             {
                 selectedMenu === "questProvider" &&
                 <>
-                  {['EDU', 'ETH', 'ARB'].map((token) => (
-                      <div key={token} className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gray-700 rounded-lg mr-4"></div>
-                        <div>
-                          <h3 className="font-bold">{token}</h3>
-                          <p className="text-gray-400">0.5%</p>
-                          <p className="text-gray-400">Token Balance: 10,000</p>
-                        </div>
-                      </div>
-                  ))}
+                  {/*{['EDU', 'ETH', 'ARB'].map((token) => (*/}
+                  {/*    <div key={token} className="flex items-center mb-4">*/}
+                  {/*      <div className="w-12 h-12 bg-gray-700 rounded-lg mr-4"></div>*/}
+                  {/*      <div>*/}
+                  {/*        <h3 className="font-bold">{token}</h3>*/}
+                  {/*        <p className="text-gray-400">0.5%</p>*/}
+                  {/*        <p className="text-gray-400">Token Balance: 10,000</p>*/}
+                  {/*      </div>*/}
+                  {/*    </div>*/}
+                  {/*))}*/}
                 </>
             }
 
@@ -198,40 +198,40 @@ const DeployPoolPage = () => {
               selectedMenu === "user" &&
                 <>
                   {/* Token Information */}
-                  {['EDU', 'ETH', 'ARB'].map((token) => (
-                      <div key={token} className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gray-700 rounded-lg mr-4"></div>
-                        <div>
-                          <h3 className="font-bold">{token}</h3>
-                          <p className="text-gray-400">0.5%</p>
-                          <p className="text-gray-400">Token Balance: 10,000</p>
-                        </div>
-                      </div>
-                  ))}
+                  {/*{['EDU', 'ETH', 'ARB'].map((token) => (*/}
+                  {/*    <div key={token} className="flex items-center mb-4">*/}
+                  {/*      <div className="w-12 h-12 bg-gray-700 rounded-lg mr-4"></div>*/}
+                  {/*      <div>*/}
+                  {/*        <h3 className="font-bold">{token}</h3>*/}
+                  {/*        <p className="text-gray-400">0.5%</p>*/}
+                  {/*        <p className="text-gray-400">Token Balance: 10,000</p>*/}
+                  {/*      </div>*/}
+                  {/*    </div>*/}
+                  {/*))}*/}
                 </>
             }
 
 
             {/* Amount and Price Inputs */}
-            <div className="space-y-4 mb-8">
-              <div>
-                <label className="block text-gray-400 mb-2">Amount</label>
-                <input type="text" className="w-full bg-gray-700 p-2 rounded" placeholder="0.00"/>
-              </div>
-            </div>
+            {/*<div className="space-y-4 mb-8">*/}
+            {/*  <div>*/}
+            {/*    <label className="block text-gray-400 mb-2">Amount</label>*/}
+            {/*    <input type="text" className="w-full bg-gray-700 p-2 rounded" placeholder="0.00"/>*/}
+            {/*  </div>*/}
+            {/*</div>*/}
 
 
             {
                 selectedMenu === "questProvider" &&
                 <>
-                  <div className="mt-8">
-                    <p className="mb-2">{questProviderPoolValue}% Quest Provider Pool</p>
-                    <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-                      <div className="bg-indigo-600 h-2 rounded-full"
-                           style={{width: `${questProviderPoolValue}%`}}></div>
-                    </div>
-                    <p>{questProviderPoolValue}% Quest Provider Pool</p>
-                  </div>
+                  {/*<div className="mt-8">*/}
+                  {/*  <p className="mb-2">{questProviderPoolValue}% Quest Provider Pool</p>*/}
+                  {/*  <div className="w-full bg-gray-700 rounded-full h-2 mb-2">*/}
+                  {/*    <div className="bg-indigo-600 h-2 rounded-full"*/}
+                  {/*         style={{width: `${questProviderPoolValue}%`}}></div>*/}
+                  {/*  </div>*/}
+                  {/*  <p>{questProviderPoolValue}% Quest Provider Pool</p>*/}
+                  {/*</div>*/}
                 </>
             }
 
@@ -240,36 +240,35 @@ const DeployPoolPage = () => {
                 <>
 
                   {/* Distribution Slider */}
-                  <div className="mt-8">
-                    <p className="mb-2">{userPoolValue}% User Provider Pool</p>
-                    <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-                      <div className="bg-indigo-600 h-2 rounded-full" style={{width: `${userPoolValue}%`}}></div>
-                    </div>
-                    <p>{userPoolValue}% User Pool</p>
-                  </div>
+                  {/*<div className="mt-8">*/}
+                  {/*  <p className="mb-2">{userPoolValue}% User Provider Pool</p>*/}
+                  {/*  <div className="w-full bg-gray-700 rounded-full h-2 mb-2">*/}
+                  {/*    <div className="bg-indigo-600 h-2 rounded-full" style={{width: `${userPoolValue}%`}}></div>*/}
+                  {/*  </div>*/}
+                  {/*  <p>{userPoolValue}% User Pool</p>*/}
+                  {/*</div>*/}
                 </>
             }
 
             {
                 selectedMenu === "manage" &&
                 <>
-
-                  <div>
-                    <label className="block text-gray-400 mb-2">Add to pool</label>
-                    <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={addToPoolValue}
-                        onChange={(e: any) => setAddToPoolValue(e.target.value)}
-                        className="w-full mb-2"
-                    />
-                    <div className="flex justify-between text-sm">
-                      <span>0%</span>
-                      <span>{addToPoolValue}%</span>
-                      <span>100%</span>
-                    </div>
-                  </div>
+                  {/*<div>*/}
+                  {/*  <label className="block text-gray-400 mb-2">Add to pool</label>*/}
+                  {/*  <input*/}
+                  {/*      type="range"*/}
+                  {/*      min="0"*/}
+                  {/*      max="100"*/}
+                  {/*      value={addToPoolValue}*/}
+                  {/*      onChange={(e: any) => setAddToPoolValue(e.target.value)}*/}
+                  {/*      className="w-full mb-2"*/}
+                  {/*  />*/}
+                  {/*  <div className="flex justify-between text-sm">*/}
+                  {/*    <span>0%</span>*/}
+                  {/*    <span>{addToPoolValue}%</span>*/}
+                  {/*    <span>100%</span>*/}
+                  {/*  </div>*/}
+                  {/*</div>*/}
                 </>
             }
           </div>
