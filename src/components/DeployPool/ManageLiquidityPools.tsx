@@ -82,7 +82,7 @@ const ManageLiquidityPools = () => {
 
         const tokenAddress = "0xBC9129Dc0487fc2E169941C75aABC539f208fb01";
 
-        const token = new Contract(tokenAddress, [
+        const token: any = new Contract(tokenAddress, [
           "function approve(address spender, uint256 amount) external returns (bool)",
           "function allowance(address owner, address spender) external view returns (uint256)",
           "function balanceOf(address account) external view returns (uint256)"
@@ -92,7 +92,7 @@ const ManageLiquidityPools = () => {
 
         console.log(address)
         // 토큰 잔액 확인
-        const balance = await token.balanceOf(address);
+        const balance: any = await token.balanceOf(address);
         console.log(`Token balance: ${formatUnits(balance, 18)} EDU`);
 
         if (balance < amountInWei) {
@@ -113,14 +113,16 @@ const ManageLiquidityPools = () => {
         }
 
         // ProtocolProvider 컨트랙트 인스턴스 생성
-        const contract = new Contract(ProtocolProviderAddress, ProtocolProviderAbi, signer);
+        const contract: any = new Contract(ProtocolProviderAddress, ProtocolProviderAbi, signer);
 
         // 가스 추정
         const gasEstimate = await contract.deposit.estimateGas(amountInWei);
         console.log(`Estimated gas for deposit: ${gasEstimate.toString()}`);
 
         console.log("Depositing tokens...");
-        const depositTx = await contract.deposit(amountInWei, {
+        // @ts-ignore
+        const depositTx: any = await contract.deposit(amountInWei, {
+          // @ts-ignore
           gasLimit: gasEstimate * 120n / 100n // 20% 버퍼 추가
         });
 

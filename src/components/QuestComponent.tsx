@@ -86,7 +86,12 @@ const QuestComponent = ({
                           userWalletAddress,
                           currentQuest,
                           questList,
-                          setQuestList
+                          setQuestList,
+                          navigateQuestion,
+                          dragOffset,
+                          setDragOffset,
+                          isLastQuestion,
+                          setIsLastQuestion
                         }: {
   quest: any;
   currentQuestion: number;
@@ -99,6 +104,11 @@ const QuestComponent = ({
   currentQuest: any;
   questList: any;
   setQuestList: any;
+  navigateQuestion: any;
+  dragOffset: any;
+  setDragOffset: any;
+  isLastQuestion: any;
+  setIsLastQuestion: any;
 }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
@@ -106,15 +116,14 @@ const QuestComponent = ({
   const [dislikes, setDislikes] = useState(0);
   const [views, setViews] = useState(0);
   const [comments, setComments] = useState(0);
-  const [dragOffset, setDragOffset] = useState({x: 0, y: 0});
   const [isDragging, setIsDragging] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({x: 0, y: 0});
 
   useEffect(() => {
     if (quest) {
+      console.log(quest)
 
       // fetchLikeDislikeStatus();
       // incrementViewCount();
@@ -151,6 +160,7 @@ const QuestComponent = ({
       return false;
     }
   }
+
   const getStatsContact = async () => {
     try {
       if (window.ethereum) {
@@ -159,16 +169,16 @@ const QuestComponent = ({
           const signer = await provider.getSigner();
 
           const contract: any = new Contract(EduchainQuizAddress, EduchainQuizAbi, signer);
-          console.log("contract : ", contract)
+          // console.log("contract : ", contract)
           const questProviderContract: any = new Contract(QuestProviderAddress, QuestProviderAbi, signer);
-          console.log("questProviderContract : ", questProviderContract)
+          // console.log("questProviderContract : ", questProviderContract)
 
           const result = await questProviderContract.getQuestSubmissionInfo(quest.id, quest.provider)
-          console.log("result : ", result)
+          // console.log("result : ", result)
 
           const isVerification = result[2]
 
-          if(!isVerification){
+          if (!isVerification) {
             const deleteResult: any = await deleteQuest(quest.id);
             if (deleteResult) {
               const newQuestList = questList.filter((q: any) => q.id !== quest.id);
@@ -180,10 +190,10 @@ const QuestComponent = ({
           }
 
           const infoResult = await contract.getQuestStats(quest.id)
-          console.log("infoResult : ", infoResult)
+          // console.log("infoResult : ", infoResult)
 
           const userResult = await contract.getUserInfo(userWalletAddress)
-          console.log("userResult : ", userResult)
+          // console.log("userResult : ", userResult)
 
           const totalViews = Number(quest.participation)
           const totalLikes = Number(quest.likes)
@@ -204,6 +214,16 @@ const QuestComponent = ({
   useEffect(() => {
     getStatsContact()
   }, [currentQuest]);
+
+  useEffect(() => {
+    if (quest && quest.questions) {
+      const isLast = currentQuestion === quest.questions.length - 1;
+      console.log("Is last question:", isLast);
+      console.log("Current question index:", currentQuestion);
+      console.log("Total questions:", quest.questions.length);
+      setIsLastQuestion(isLast);
+    }
+  }, [currentQuestion, quest]);
 
   const fetchLikeDislikeStatus = async () => {
     if (!quest) return;
@@ -260,13 +280,12 @@ const QuestComponent = ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userWalletAddress, isDisliked: newDislikedState }),
+        body: JSON.stringify({userWalletAddress, isDisliked: newDislikedState}),
       });
     } catch (error) {
       console.error('Failed to update dislike status:', error);
     }
   };
-
 
 
   const handleDragStart = (clientX: number, clientY: number) => {
@@ -287,7 +306,7 @@ const QuestComponent = ({
         }
       } else {
         // 좌우 드래그 (기존 로직)
-        setDragOffset({ x: offsetX, y: 0 });
+        setDragOffset({x: offsetX, y: 0});
       }
     }
   };
@@ -306,19 +325,6 @@ const QuestComponent = ({
     }
   };
 
-  const navigateQuestion = (direction: 'prev' | 'next') => {
-    if (isAnimating) return;
-
-    setIsAnimating(true);
-    const targetOffset = direction === 'prev' ? window.innerWidth : -window.innerWidth;
-    setDragOffset({x: targetOffset, y: 0});
-
-    setTimeout(() => {
-      onNavigateQuestion(direction);
-      setDragOffset({x: 0, y: 0});
-      setIsAnimating(false);
-    }, 300);
-  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
@@ -393,9 +399,8 @@ const QuestComponent = ({
     return <div className="text-center p-4">Loading quest data...</div>;
   }
 
-  const allQuestionsAnswered = quest.questions.every((q:any) => selectedAnswers[q.id] !== undefined);
-  const isFirstQuestion = currentQuestion === 0;
-  const isLastQuestion = currentQuestion === quest.questions.length - 1;
+  const allQuestionsAnswered = quest.questions.every((q: any) => selectedAnswers[q.id] !== undefined);
+
 
   return (
       <div
@@ -415,8 +420,8 @@ const QuestComponent = ({
           }}
       >
         <div className="bg-gray-300 flex-grow flex items-center justify-center flex-col p-4">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">{quest.title}</h2>
-          <p className="text-lg sm:text-xl mb-4">{quest.content}</p>
+          {/*<h2 className="text-xl sm:text-2xl font-bold mb-4">{quest.title}</h2>*/}
+          {/*<p className="text-lg sm:text-xl mb-4">{quest.content}</p>*/}
           {quest.questions[currentQuestion] && (
               <p className="text-lg sm:text-xl">{quest.questions[currentQuestion].question}</p>
           )}
@@ -428,24 +433,24 @@ const QuestComponent = ({
                 className={`flex items-center space-x-1 ${isLiked ? 'text-blue-500' : 'text-gray-500'}`}
             >
               <ThumbsUpIcon/>
-              <span style={{fontSize:"18px"}}>{likes}</span>
+              <span style={{fontSize: "18px"}}>{likes}</span>
             </button>
             <button
                 onClick={handleDislike}
                 className={`flex items-center space-x-1 ${isDisliked ? 'text-red-500' : 'text-gray-500'}`}
             >
               <ThumbsDownIcon/>
-              <span style={{fontSize:"18px"}}>{dislikes}</span>
+              <span style={{fontSize: "18px"}}>{dislikes}</span>
             </button>
           </div>
           <div className="flex space-x-4">
             <div className="flex items-center space-x-1">
               <EyeIcon/>
-              <span style={{fontSize:"18px"}}>{views}</span>
+              <span style={{fontSize: "18px"}}>{views}</span>
             </div>
             <div className="flex items-center space-x-1">
               <MessageSquareIcon/>
-              <span style={{fontSize:"18px"}}>{comments}</span>
+              <span style={{fontSize: "18px"}}>{comments}</span>
             </div>
             <button onClick={handleShare}>
               <ShareIcon/>
@@ -477,20 +482,7 @@ const QuestComponent = ({
               </button>
           )}
         </div>
-        <button
-            onClick={() => navigateQuestion('prev')}
-            className={`absolute left-2 top-1/2 transform -translate-y-1/2 ${isFirstQuestion ? 'text-gray-400 cursor-not-allowed' : 'text-black cursor-pointer'}`}
-            disabled={isFirstQuestion || isAnimating}
-        >
-          &lt;
-        </button>
-        <button
-            onClick={() => navigateQuestion('next')}
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 ${isLastQuestion ? 'text-gray-400 cursor-not-allowed' : 'text-black cursor-pointer'}`}
-            disabled={isLastQuestion || isAnimating}
-        >
-          &gt;
-        </button>
+
       </div>
   );
 };

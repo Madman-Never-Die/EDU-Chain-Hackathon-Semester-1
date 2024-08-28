@@ -10,6 +10,8 @@ import {roleState} from "@/recoil/role";
 import QuestComponent from "@/components/QuestComponent";
 import {BrowserProvider, Contract} from 'ethers';
 import EduchainQuizAbi from '../EduchainQuiz.json' assert {type: "json"};
+import { MdArrowBackIos } from "react-icons/md";
+import { MdArrowForwardIos } from "react-icons/md";
 
 
 declare global {
@@ -61,7 +63,13 @@ const MainPage = () => {
   const {questList, setQuestList, isLoading, error, fetchQuestList, updateQuestParticipation}: any = useQuestList();
 
   const [selectedAnswers, setSelectedAnswers] = useState<{ [questId: number]: { [questionId: number]: Answer } }>({});
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [dragOffset, setDragOffset] = useState({x: 0, y: 0});
 
+
+
+  const isFirstQuestion = currentQuestion === 0;
+  const [isLastQuestion, setIsLastQuestion] = useState(false)
 
   const handleQuestComplete = async (questId: number, isLiked: boolean) => {
     try {
@@ -253,7 +261,26 @@ const MainPage = () => {
       setCurrentQuestion(prev => prev + 1);
     }
   };
+  const QuestInfoBox = ({ title, content }: any) => (
+      <div className="bg-gray-300 w-full max-w-2xl mx-auto my-4 p-6 rounded-lg shadow-md" style={{width: "448px"}}>
+        <h2 className="text-xl font-bold text-left mb-2 text-black">title : {title}</h2>
+        <p className="text-left text-black">content : {content}</p>
+      </div>
+  );
 
+  const navigateQuestion = (direction: 'prev' | 'next') => {
+    if (isAnimating) return;
+
+    setIsAnimating(true);
+    const targetOffset = direction === 'prev' ? window.innerWidth : -window.innerWidth;
+    setDragOffset({x: targetOffset, y: 0});
+
+    setTimeout(() => {
+      onNavigateQuestion(direction);
+      setDragOffset({x: 0, y: 0});
+      setIsAnimating(false);
+    }, 300);
+  };
   return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex justify-center">
@@ -263,10 +290,24 @@ const MainPage = () => {
               </div>
           )}
         </div>
-        <main className="flex-grow overflow-y-auto p-4 flex items-center justify-center">
-          <div className="quests-container h-full flex items-center justify-center">
-            {questList.map((quest: Quest, questIndex: number) => (
-                <>
+        <main className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-start">
+          <QuestInfoBox
+              title={questList[currentQuest]?.title}
+              content={questList[currentQuest]?.content}
+          />
+
+          <div className="flex items-center justify-center w-full">
+            <button
+                onClick={() => navigateQuestion('prev')}
+                className={`${isFirstQuestion ? 'text-black cursor-not-allowed' : 'text-white cursor-pointer'}`}
+                disabled={isFirstQuestion || isAnimating}
+                style={{fontSize: "64px"}}
+            >
+              <MdArrowBackIos/>
+            </button>
+
+            <div className="quests-container h-full flex items-center justify-center">
+              {questList.map((quest: Quest, questIndex: number) => (
                   <div
                       key={quest.id}
                       className="quest-component"
@@ -286,16 +327,29 @@ const MainPage = () => {
                         }
                         onQuestComplete={handleQuestComplete}
                         onNavigateQuestion={onNavigateQuestion}
-                        userWalletAddress={account} // 여기에 사용자의 지갑 주소를 전달
+                        userWalletAddress={account}
                         onVerticalDrag={handleVerticalDrag}
                         currentQuest={currentQuest}
                         questList={questList}
                         setQuestList={setQuestList}
-
+                        navigateQuestion={navigateQuestion}
+                        dragOffset={dragOffset}
+                        setDragOffset={setDragOffset}
+                        isLastQuestion={isLastQuestion}
+                        setIsLastQuestion={setIsLastQuestion}
                     />
                   </div>
-                </>
-            ))}
+              ))}
+            </div>
+
+            <button
+                onClick={() => navigateQuestion('next')}
+                className={`${isLastQuestion ? 'text-black cursor-not-allowed' : 'text-white cursor-pointer'}`}
+                disabled={isLastQuestion || isAnimating}
+                style={{fontSize: "64px"}}
+            >
+              <MdArrowForwardIos/>
+            </button>
           </div>
         </main>
       </div>
